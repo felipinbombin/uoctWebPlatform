@@ -1,0 +1,21 @@
+{
+  "name": "uoctWebPlatform",
+  "homepage": "https://github.com/felipinbombin/uoctWebPlatform",
+  "authors": [
+    "Felipe Hernández <cephei.1313@gmail.com>"
+  ],
+  "description": "web platform to run uoct map views",
+  "main": "",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "gentelella": "^1.4.0"
+  }
+}
