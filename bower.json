@@ -16,6 +16,10 @@
     "tests"
   ],
   "dependencies": {
-    "gentelella": "^1.4.0"
+    "gentelella": "^1.4.0",
+    "leaflet": "^1.0.3",
+    "leaflet-polylinedecorator": "^1.1.0",
+    "Leaflet.EasyButton": "^2.2.0",
+    "leaflet-control-window": "*"
   }
 }
