@@ -190,7 +190,7 @@
 		   {
 		     stateName: 'show-streets',
 		     title: 'show all streets',
-		     icon: 'fa-check-square-o',
+		     icon: 'fa-check-square-o fa-lg',
 		     onClick: function(control){ 
                $.each(layers, function(i, l){
                  map.removeLayer(l.layer);
@@ -200,7 +200,7 @@
 		   }, {
 		     stateName: 'hide-streets',
 		     title: 'hide all streets',
-		     icon: 'fa-square-o',
+		     icon: 'fa-square-o fa-lg',
 		     onClick: function(control){ 
                $.each(layers, function(i, l){
                  l.layer.addTo(map);
