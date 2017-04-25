@@ -90,3 +90,4 @@ myenv/
 .ropeproject
 
 uoctWebPlatform/keys/
+static/
