@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import View
 from django.http import JsonResponse
 from django.db import connection
+import datetime as dt
 
 from velocity.models import Tramos15MinUOCT, OrigenYDestinoEjes15MinUOCT
 
@@ -55,7 +56,7 @@ class GetStreetData(View):
                 #street['name'] = point.eje
                 street['origin'] = point.hito_origen
                 street['destination'] = point.hito_destino
-                #street['zone'] = point.zona
+                #street['group'] = point.zona
                 #street['zoneGoal'] = point.destino
                 #street['velocity'] = point.velocidad_eje
                 #street['time'] = point.tiempo_viaje_eje
@@ -66,8 +67,8 @@ class GetStreetData(View):
                 section = {}
                 section['originStreet'] = point.calle_origen
                 section['destinationStreet'] = point.calle_destino
-                #section['velocity'] = point.velocidad_tramo
-                #section['time'] = point.tiempo_viaje_tramo
+                section['nObs'] = point.nobs
+                section['group'] = point.grupo
                 section['segxkm'] = point.segundos_por_km_tramo
                 section['points'] = []
                 response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
@@ -76,6 +77,17 @@ class GetStreetData(View):
                 'distOnRoute': point.dist_en_ruta, 
                 'latitude': point.latitud, 
                 'longitude': point.longitud})
+
+        hour = None
+        dayType = None
+        if point:
+            delta = dt.timedelta(minutes=15)
+            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
+            hour = "{}-{}".format(point.periodo15, upperTimeLimit)
+            dayType = point.tipo_dia
+
+        response['hour'] = hour
+        response['dayType'] = dayType
 
         return JsonResponse(response, safe=False)
 

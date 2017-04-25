@@ -44,111 +44,22 @@
   <script src="{% static "components/leaflet-polylinedecorator/leaflet.polylineDecorator.js" %}"></script>
   <script src="{% static "components/Leaflet.EasyButton/src/easy-button.js" %}"></script>
   <script src="{% static "components/leaflet-control-window/src/L.Control.Window.js" %}"></script>
+  <script src="{% static "own/leaflet-polylinedecorator/longArrowHead.js" %}"></script>
   <script>
     $(document).ready(function() { 
-      /**
-       * To calculate the distance of polyline
-       *
-       */
-       L.Polyline.prototype.length_in_meters = function () {
-         var metros_totales_ruta = 0;
-         var coordenadas_iniciales = null;
-         var array_coordenadas_polilinea = this._latlngs;
+       var currentHour = '';
+       var currentDayType = '';
+       var layers = {};
 
-         for (i = 0; i < array_coordenadas_polilinea.length - 1; i++) {
-           coordenadas_iniciales = array_coordenadas_polilinea[i];
-           metros_totales_ruta  += coordenadas_iniciales.distanceTo(array_coordenadas_polilinea[i + 1]);
-         }
-         //redondear los metros de la ruta...
-         metros_totales_ruta = metros_totales_ruta.toFixed();
-         return metros_totales_ruta;
-       };
-
-       /**
-        * CREATE NEW SYMBOL TO POLYLINE DECORATOR
-        */
-       L.Symbol.LongArrowHead = L.Class.extend({
-         isZoomDependant: true,
-    
-         options: {
-           polygon: true,
-           pixelSize: 10,
-           headAngle: 60,
-           pathOptions: {
-             stroke: false,
-             weight: 2
-           }
-         },
-    
-         initialize: function (options) {
-           L.Util.setOptions(this, options);
-           this.options.pathOptions.clickable = false;
-         },
-
-         buildSymbol: function(dirPoint, latLngs, map, index, total) {
-           var opts = this.options;
-           var path;
-           if(opts.polygon) {
-             path = new L.Polygon(this._buildArrowPath(dirPoint, map), opts.pathOptions);
-           } else {
-             path = new L.Polyline(this._buildArrowPath(dirPoint, map), opts.pathOptions);
-           }
-           return path;
-         },
-    
-         _buildArrowPath: function (dirPoint, map) {
-           var d2r = Math.PI / 180;
-           var tipPoint = map.project(dirPoint.latLng);
-           var direction = (-(dirPoint.heading - 90)) * d2r;
-           var radianArrowAngle = this.options.headAngle / 2 * d2r;
-        
-           var headAngle1 = direction + radianArrowAngle,
-                            headAngle2 = direction - radianArrowAngle;
-                            headAngle3 = direction + 0;
-                            headAngle4 = direction - 0;
-                            headAngle5 = direction - radianArrowAngle;
-           var arrowHead1 = new L.Point(
-             tipPoint.x - this.options.pixelSize * Math.cos(headAngle1),
-             tipPoint.y + this.options.pixelSize * Math.sin(headAngle1)),
-               arrowHead2 = new L.Point(
-             tipPoint.x - this.options.pixelSize * Math.cos(headAngle2),
-             tipPoint.y + this.options.pixelSize * Math.sin(headAngle2)),
-               arrowBack1 = new L.Point(
-             arrowHead1.x - (this.options.pixelSize*1.5) * Math.cos(headAngle3),
-             arrowHead1.y + (this.options.pixelSize*1.5) * Math.sin(headAngle3)),
-               arrowBack2 = new L.Point(
-             arrowHead2.x - (this.options.pixelSize * 1.5) * Math.cos(headAngle4),
-             arrowHead2.y + (this.options.pixelSize * 1.5) * Math.sin(headAngle4)),
-               arrowBackCenter = new L.Point(
-             arrowBack2.x + this.options.pixelSize * Math.cos(headAngle5),
-             arrowBack2.y - this.options.pixelSize * Math.sin(headAngle5));
-                        
-           return [
-             map.unproject(arrowBack1),
-             map.unproject(arrowHead1),
-             dirPoint.latLng, 
-             map.unproject(arrowHead2),
-             map.unproject(arrowBack2),
-             map.unproject(arrowBackCenter),
-           ];
-         }
-       });
-
-       L.Symbol.longArrowHead = function (options) {
-         return new L.Symbol.LongArrowHead(options);
-       };
-
-	   var currentHour = "";
        /**
         * SET MAP
         */
        var beauchefLocation = L.latLng(-33.457910, -70.663869);
-	   var mapid = $(".right_col")[0];
+       var mapid = $(".right_col")[0];
        var map = L.map(mapid, {
          editable: true,
          closePopupOnClick: false
        }).setView(beauchefLocation, 13);
-       var layers = {};
        var blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
        var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
@@ -157,77 +68,69 @@
        var mapControl = L.control.layers({}, {}).addTo(map);
 
        // color for line
-       var getColor = function (d) {
-         return d <  0  ? '#c4c4c4' :
+       function getColor(d) {
+         return d <  0   ? '#c4c4c4' :
                 d <= 180 ? '#59F000' :
                 d <= 240 ? '#F1FE00' :
                 d <= 300 ? '#FF7400' :
                 d <= 360 ? '#FF0000' :
-                          '#68266F';
+                           '#68266F';
        };
 
        /**
-        * DEFINE INFO
+        * DEFINE FILTER
         */
-	   /*
-	   L.easyButton('fa-info', function(btn, map) {
-	     var win = L.control.window(map, {
-           title:'Segundos por kilómetro', 
-		   content:'Los datos que se muestran consideran los puntos GPS de los buses de los últimos 15 minutos.',
-		   modal: true,
-		   position: 'top'
-		 }).show()
-	   }).addTo(map);
-	   */
+       L.easyButton({
+         position: 'topright',
+         states: [{
+           stateName: 'filter',
+           icon: 'fa-filter fa-lg', 
+           onClick: function(btn, map) {
+             var win = L.control.window(map, {
+               title:'Filtro de tramos', 
+               content:'A continuación se muestran tres tipos de filtros: por eje, grupo o categoría',
+               modal: true,
+               position: 'top'
+               }).prompt({
+                 callback: function(){
+				   alert('heloo!!!');
+				 }
+               }).show()
+           }
+         }]
+       }).addTo(map);
 
        /**
-        * HIDE OR SHOW ALL 
+        * HIDE OR SHOW ALL POLYLINES
         */
-	   L.easyButton({
-		 position: 'topright',
-		 leafletClasses: true,
+       L.easyButton({
+         position: 'topright',
+         leafletClasses: true,
          states:[
-		   {
-		     stateName: 'show-streets',
-		     title: 'show all streets',
-		     icon: 'fa-check-square-o fa-lg',
-		     onClick: function(control){ 
+           {
+             stateName: 'show-streets',
+             title: 'show all streets',
+             icon: 'fa-check-square-o fa-lg',
+             onClick: function(control){ 
                $.each(layers, function(i, l){
                  map.removeLayer(l.layer);
                });
-			   control.state('hide-streets');
-			 }
-		   }, {
-		     stateName: 'hide-streets',
-		     title: 'hide all streets',
-		     icon: 'fa-square-o fa-lg',
-		     onClick: function(control){ 
+               control.state('hide-streets');
+             }
+           }, {
+             stateName: 'hide-streets',
+             title: 'hide all streets',
+             icon: 'fa-square-o fa-lg',
+             onClick: function(control){ 
                $.each(layers, function(i, l){
                  l.layer.addTo(map);
                });
-			   control.state('show-streets');
-		     }
-		   }
-		 ]
-	   }).addTo(map);
+               control.state('show-streets');
+             }
+           }
+         ]
+       }).addTo(map);
 
-	   /*
-       var info = L.control({position: 'topright'});
-
-       info.onAdd = function (map) {
-         this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-         this._div.innerHTML = '<h4>Velocidad por eje</h4>' + 
-           '<b>Muestra de las velocidades presente en los ejes principales de Santiago de chile</b>' + 
-           '<br /> Los datos mostrados consideran la velocidad de los buses de los últimos 15 minutos.' +
-           '<br /> que recorren las calles señaladas.' + 
-           '<br /><h5>Indicar destino</h5>' +
-           '<select id="destination" class="form-control">' +
-           '</select>';
-         return this._div;
-       };
-       info.addTo(map);
-	   */
-                
        /**
         * DEFINE LEGEND
         */
@@ -236,6 +139,8 @@
           var div = L.DomUtil.create('div', 'info legend'),
           grades = [0, 180, 240, 300, 360],
           labels = [];
+
+          div.innerHTML += '<h4>seg/km</h4>';
 
           // loop through our density intervals and generate a label with a colored square for each interval
           for (var i = 0; i < grades.length; i++) {
@@ -251,13 +156,24 @@
        /**
         * DEFINE HOUR
         */
-        var hourControl = L.control({position: 'bottomleft'});
+        var hourControl = L.control({position: 'topleft'});
         hourControl.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info hour');
-	      div.innerHTML = '<i class="fa fa-clock-o fa-lg" aria-hdden="true"></i> <span id="hourInfo">12:00-12:15</span>';
+          div.innerHTML = '<i class="fa fa-clock-o fa-lg" aria-hdden="true"></i> <span id="hourInfo"></span>';
           return div;
         }; 
         hourControl.addTo(map);
+
+       /**
+        * DEFINE DAY TYPE
+        */
+        var dayTypeControl = L.control({position: 'topleft'});
+        dayTypeControl.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info day');
+          div.innerHTML = '<i class="fa fa-calendar-o fa-lg" aria-hdden="true"></i> <span id="dayType"></span>';
+          return div;
+        }; 
+        dayTypeControl.addTo(map);
 
         /**
          * DEFINE DRAW FUNCTIONS 
@@ -270,8 +186,9 @@
 
           $.each(street.sections, function(i, section){
             var latLngs = [];
-            var metrics = section.segxkm;
-            var sectionTime = section.time;
+            var metrics = section.segxkm.toFixed(1);
+            var group = section.group;
+            var nObs = section.nObs;
             var points = section.points;
             var origin = section.originStreet;
             var destination = section.destinationStreet;
@@ -310,7 +227,7 @@
             if (metrics <=0) {
               text = 'Falta info.';
             }
-            var message = "<h1>" + text + "</h1><h4>Eje: " + name + "</h4><h5>Origen: " + origin + "</h5><h5>Destino: " + destination + "</h5>";
+            var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
             decorator.bindPopup(message);
             line.bindPopup(message);
             overlay.addLayer(decorator);
@@ -369,10 +286,11 @@
           }*/
 
           var groupPanelData = {};
-          var updateMap = function(data, hour){
+          var updateMap = function(data, hour, dayType){
              
-			// update map
+            // update map
             $('#hourInfo').text(hour);
+            $('#dayType').text(dayType);
 
             // remove currents layers from map
             $.each(layers, function(i, l){
@@ -380,7 +298,7 @@
               mapControl.removeLayer(l.layer);
             });
             layers = [];
-			var bounds = null;
+            var bounds = null;
  
             // each zone
             $.each(data, function(zone, streets) {
@@ -391,11 +309,11 @@
                   name: name,
                   layer: layer
                 });
-				if (!bounds) {
+                if (!bounds) {
                   bounds = layer.getBounds();
-				} else {
+                } else {
                   bounds = bounds.extend(layer.getBounds());
-				}
+                }
               });
             });
 
@@ -405,27 +323,12 @@
               mapControl.addOverlay(l.layer, l.name);
             });
 
-			map.fitBounds(bounds);
+            map.fitBounds(bounds);
           };
 
           var streetsData = {};
-		  /*
-          var poisData = {};
-          function getPoisData() {
-            var destination = $("#destination option:selected").val();
-            var origins = poisData[destination];
-            var pois = [];
-        
-            $.each(origins, function (i, origin){
-              $.each(origin, function (name, points){
-                pois = pois.concat(points);
-              });
-            });
-        
-            return pois;
-          }*/
           
-		  function downloadData() {
+          function downloadData() {
             $.ajax({
               url: "getStreetData",
               success: function(data){
@@ -440,25 +343,16 @@
                 streetsData = data.Destination;
                 streetsData = $.extend(data.Destination,{'Todos': {'Todos': all}});
          
-		  	    /*
-                $.ajax({
-                  url: "getPOIData",
-                  success: function(data){
-                    poisData = data.Destination;
-                    drawPOIs(getPoisData());
-                  }
-                });*/
-
-				if (currentHour != data.hour) {
-				  currentHour = data.hour
-                  updateMap(streetsData['Todos'], data.hour);
-                  //drawPOIs(getPoisData());
-				}
+                if (currentHour != data.hour) {
+                  currentHour = data.hour
+                  currentDayType = data.dayType
+                  updateMap(streetsData['Todos'], currentHour, currentDayType);
+                }
               }
             });
           };
-		  downloadData();
-		  setInterval(downloadData, 5*1000);
+          downloadData();
+          setInterval(downloadData, 5*1000);
         });
   </script>
 

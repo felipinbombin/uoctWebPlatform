@@ -23,6 +23,10 @@ class Tramos15MinUOCT(models.Model):
     velocidad_eje = models.FloatField(blank=True, null=True)
     super_lento = models.IntegerField(blank=True, null=True)
     segundos_por_km_tramo = models.FloatField(blank=True, null=True)
+    nobs = models.IntegerField(blank=True, null=True)
+    grupo = models.CharField(max_length=200, blank=True, null=True)
+    periodo15 = models.TimeField(blank=True, null=True)
+    tipo_dia = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         managed = False
