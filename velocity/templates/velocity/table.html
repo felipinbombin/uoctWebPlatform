@@ -25,7 +25,7 @@
   <div class="col-md-12 col-sm-12 col-xs-12">
     <div class="x_panel">
       <div class="x_title">
-        <h2>Tramos <small><i class="fa fa-clock-o fa-lg"></i> 12:00-12:15 (esta hora es mentira)</small></h2>
+	    <h2>Tramos <small><i class="fa fa-clock-o fa-lg"></i> <span id="hour"></span></small></h2>
         <div class="clearfix"></div>
       </div>
       <div class="x_content">
@@ -63,7 +63,11 @@
 {% endwith %}
 <script>
 function loadTable() {
-  $.get('./getStreetTableData', function(dataset) {       
+  $.get('./getStreetTableData', function(data) {
+	var hour = data.hour;
+	$('#hour').text(hour);
+	var dataset = data.dataset;
+
     var dt = $('#sdatatable').DataTable({
       dom: 'frBtip',
       buttons: [

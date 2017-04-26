@@ -170,7 +170,7 @@ class GetStreetTableData(View):
         ''' '''
         points = Tramos15MinUOCT.objects.all().distinct('eje_id', 'tramo', 'calle_origen', 'calle_destino', 'segundos_por_km_tramo')
 
-        response = []
+        dataset = []
         for point in points:
             street = {}
             street['axis'] = point.eje_id
@@ -179,6 +179,14 @@ class GetStreetTableData(View):
             street['destination'] = point.calle_destino
             street['metrics'] = point.segundos_por_km_tramo
 
-            response.append(street)
+            dataset.append(street)
+
+        response = {}
+        response['dataset'] = dataset
+        response['hour'] = ''
+        if point:
+            delta = dt.timedelta(minutes=15)
+            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
+            response['hour'] = "{}-{}".format(point.periodo15, upperTimeLimit)
 
         return JsonResponse(response, safe=False)
