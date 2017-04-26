@@ -136,7 +136,7 @@
 	  '<div class="col-md-12 col-sm-12 col-xs-12">' +
 		'<div class="x_panel">' +
 		  '<div class="x_title">' +
-		    '<h2><i class="fa fa-filter"></i> Filtro</h2>' +
+		    '<h2><i class="fa fa-filter"></i> Filtro</h2>' + 
 		    '<div class="clearfix"></div>' +
 		  '</div>' +
 		  '<div class="x_content">' +
@@ -240,37 +240,6 @@
 			 win.show();
            }
          }]
-       }).addTo(map);
-
-       /**
-        * HIDE OR SHOW ALL POLYLINES
-        */
-       L.easyButton({
-         position: 'topright',
-         leafletClasses: true,
-         states:[
-           {
-             stateName: 'show-streets',
-             title: 'show all streets',
-             icon: 'fa-check-square-o fa-lg',
-             onClick: function(control){ 
-               $.each(layers, function(i, l){
-                 map.removeLayer(l.layer);
-               });
-               control.state('hide-streets');
-             }
-           }, {
-             stateName: 'hide-streets',
-             title: 'hide all streets',
-             icon: 'fa-square-o fa-lg',
-             onClick: function(control){ 
-               $.each(layers, function(i, l){
-                 l.layer.addTo(map);
-               });
-               control.state('show-streets');
-             }
-           }
-         ]
        }).addTo(map);
 
        /**
