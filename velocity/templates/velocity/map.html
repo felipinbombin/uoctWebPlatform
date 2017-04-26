@@ -68,7 +68,7 @@
     $(document).ready(function() { 
        var currentHour = '';
        var currentDayType = '';
-	   var source = {}
+	   var sourceData = [];
 	   var colors = {}; // dict
 	   var groups = {}; // dict
 	   var layers = {}; // element: {name, layer}
@@ -88,12 +88,31 @@
            layers[name] = [];
 		 }
 		 layers[name].push(layer);
+
+		 var element = {
+		   layer: layer,
+		   color: color,
+		   group: group,
+		   name: name,
+		   visible: true,
+		   addToMap: function() {
+             this.layer.addTo(map);
+			 this.visible = true;
+		   },
+           removeFromMap: function() {
+			 this.visible = false;
+			 map.removeLayer(this.layer);
+		   }
+		 };
+		 sourceData.push(element);
 	   }
 
 	   function cleanCategorizedSections() {
          colors = {};
          groups = {};
          layers = {};
+
+		 sourceData = [];
 	   }
 
 	   function cleanMap() {
@@ -207,7 +226,7 @@
                        filteredLayers.push(layerList);
 					 }
 				   });
-                   updateMap(filteredLayers, currentHour, currentDayType);
+                   updateMap(currentHour, currentDayType);
                  }
                });
 			 win.addEventListener("show", function(){
@@ -220,8 +239,21 @@
 
 			   // axis
 			   $('#listContent').empty();
-               $.each(layers, function(name, layer){
-	             var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"' /> "+name+"</label></div>";
+			   function sortByName(a, b) {
+                 return a.name.localeCompare(b.name);
+			   }
+			   sourceData.sort(sortByName);
+               $.each(sourceData, function(index, element){
+			     var checkbox = $("<input type='checkbox' " + (element.visible ? "checked='checked'":"") + " />")
+				 checkbox.change(function(){
+				   if (this.checked) {
+                     element.addToMap();
+				   } else {
+                     element.removeFromMap();
+				   }
+				 });
+	             var html = $("<div class='checkbox'><label> " + element.name + "</label></div>");
+				 html.append(checkbox);
 				 $('#listContent').append(html);
 			   });
 
@@ -305,7 +337,7 @@
         }; 
         dayTypeControl.addTo(map);
 
-        function updateMap(streetLayers, hour, dayType) {
+        function updateMap(hour, dayType) {
              
 		  cleanMap();
 
@@ -316,15 +348,15 @@
           var bounds = null;
  
           // add layers to map and control
-          $.each(streetLayers, function(i, layerList){
-            $.each(layerList, function(i, layer){
+          $.each(sourceData, function(index, element){
+			if (element.visible) {
+              element.layer.addTo(map);
               if (!bounds) {
-                bounds = layer.getBounds();
+                bounds = element.layer.getBounds();
               } else {
-                bounds = bounds.extend(layer.getBounds());
+                bounds = bounds.extend(element.layer.getBounds());
               }
-              layer.addTo(map);
-            });
+			}
           });
 
           map.fitBounds(bounds);
@@ -333,89 +365,85 @@
         /**
          * CREATE OVERLAYS 
          */
-		function generateOverlays(name, street) {
+		function generateOverlays(streetName, sectionName, section) {
           
-          $.each(street.sections, function(i, section) {
-
-            var latLngs = [];
-            var metrics = section.segxkm != null ? section.segxkm.toFixed(1) : -1;
-            var group = section.group;
-            var nObs = section.nObs;
-            var points = section.points;
-            var origin = section.originStreet;
-            var destination = section.destinationStreet;
+          var latLngs = [];
+          var metrics = section.segxkm != null ? section.segxkm.toFixed(1) : -1;
+          var group = section.group;
+          var nObs = section.nObs;
+          var points = section.points;
+          var origin = section.originStreet;
+          var destination = section.destinationStreet;
             
-            // order points by distOnRoute
-            points.sort(function(a, b) {
-              return a.distOnRoute - b.distOnRoute;
-            });
-    
-			// populate positions
-            $.each(points, function(i2, point) {
-              latLngs.push([point.latitude, point.longitude]);
-            });
-
-            var line = L.polyline(latLngs, {color: getColor(metrics)});
-
-            var patternsOpts = [
-              // defines a pattern of 10px-wide dashes, repeated every 20px on the line
-              {offset: 10, 
-               endOffset: 5,  
-			   repeat: '5%', 
-			   symbol: L.Symbol.longArrowHead({
-                 rotate: true,
-                 pixelSize: 5, 
-                 polygon: true, 
-                 pathOptions: {
-                   color: getColor(metrics), 
-                   stroke: false,
-                   fillColor: getColor(metrics),
-                   fillOpacity: 1.0
-                 }
-               })
-			  }
-            ]
-            var decorator = L.polylineDecorator(line, {patterns: patternsOpts});
-
-			//********************************************************/
-            // set bubble
-            var text = metrics + " seg/km";
-            if (metrics <=0) {
-              text = 'Sin Datos';
-            }
-            var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
-            decorator.bindPopup(message);
-            line.bindPopup(message);
-
-            //********************************************************/
-            // animation
-            var arrowOffset = 0;
-            patternsOpts[0].repeat = 0;
-            var anim = window.setInterval(function() {
-              patternsOpts[0].offset = arrowOffset + '%';
-              decorator.setPatterns(patternsOpts);
-              if(arrowOffset > 100)
-                arrowOffset = 0;
-              arrowOffset = arrowOffset + 1;
-            }, 50);
-            //********************************************************/
-            
-			// create overlay
-            var overlay = L.featureGroup([]);
-            overlay.addLayer(line);
-            overlay.addLayer(decorator);
-
-	        categorizeSection(overlay, getColor(metrics), group, name);
-
-            console.log("Map updated with polyline decorator");
+          // order points by distOnRoute
+          points.sort(function(a, b) {
+            return a.distOnRoute - b.distOnRoute;
           });
+    
+		  // populate positions
+          $.each(points, function(i2, point) {
+            latLngs.push([point.latitude, point.longitude]);
+          });
+
+          var line = L.polyline(latLngs, {color: getColor(metrics)});
+
+          var patternsOpts = [
+          // defines a pattern of 10px-wide dashes, repeated every 20px on the line
+          {offset: 10, 
+            endOffset: 5,  
+		    repeat: '5%', 
+		    symbol: L.Symbol.longArrowHead({
+              rotate: true,
+              pixelSize: 5, 
+              polygon: true, 
+              pathOptions: {
+                color: getColor(metrics), 
+                stroke: false,
+                fillColor: getColor(metrics),
+                fillOpacity: 1.0
+              }
+            })
+		  }
+          ]
+          var decorator = L.polylineDecorator(line, {patterns: patternsOpts});
+
+		  //********************************************************/
+          // set bubble
+          var text = metrics + " seg/km";
+          if (metrics <=0) {
+            text = 'Sin Datos';
+          }
+          var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
+          decorator.bindPopup(message);
+          line.bindPopup(message);
+
+          //********************************************************/
+          // animation
+          var arrowOffset = 0;
+          patternsOpts[0].repeat = 0;
+          var anim = window.setInterval(function() {
+            patternsOpts[0].offset = arrowOffset + '%';
+            decorator.setPatterns(patternsOpts);
+            if(arrowOffset > 100)
+              arrowOffset = 0;
+            arrowOffset = arrowOffset + 1;
+          }, 50);
+          //********************************************************/
+            
+		  // create overlay
+          var overlay = L.featureGroup([]);
+          overlay.addLayer(line);
+          overlay.addLayer(decorator);
+
+	      categorizeSection(overlay, getColor(metrics), group, streetName);
+
+          console.log("Map updated with polyline decorator");
 		}
 
         function downloadData() {
           $.ajax({
             url: "getStreetData",
             success: function(data){
-
               if (currentHour != data.hour) {
                 // merge streets
                 var streets = {};
@@ -427,10 +455,12 @@
                 currentHour = data.hour
                 currentDayType = data.dayType
                 cleanCategorizedSections();
-                $.each(streets, function(name, street) {
-                  generateOverlays(name, street);
+                $.each(streets, function(streetName, street) {
+                  $.each(street.sections, function(sectionName, section) {
+                    generateOverlays(streetName, sectionName, section);
+                  });
                 });
-                updateMap(layers, currentHour, currentDayType);
+                updateMap(currentHour, currentDayType);
               }
             }
           });
