@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="{% static "components/leaflet/dist/leaflet.css" %}">
   <link rel="stylesheet" href="{% static "components/Leaflet.EasyButton/src/easy-button.css" %}">
   <link rel="stylesheet" href="{% static "components/leaflet-control-window/src/L.Control.Window.css" %}">
+  {% with "components/gentelella/vendors/" as gentelella_static %}
+    <link href="{% static gentelella_static|add:"iCheck/skins/flat/green.css" %}">
+  {% endwith %}
   <style>
     .info {
       padding: 6px 8px;
@@ -33,6 +36,18 @@
       margin-right: 8px;
       opacity: 0.8;
     }
+
+    .filterColor {
+      width: 18px;
+      height: 18px;
+      float: right;
+      margin-right: 8px;
+      opacity: 1.0;
+    }
+
+	.nav_menu {
+      margin-bottom: 0;
+	}
   </style>
 {% endblock %}
 
@@ -40,16 +55,54 @@
 {% endblock %}
 
 {% block js %}
+  
   <script src="{% static "components/leaflet/dist/leaflet.js" %}"></script>
   <script src="{% static "components/leaflet-polylinedecorator/leaflet.polylineDecorator.js" %}"></script>
   <script src="{% static "components/Leaflet.EasyButton/src/easy-button.js" %}"></script>
   <script src="{% static "components/leaflet-control-window/src/L.Control.Window.js" %}"></script>
   <script src="{% static "own/leaflet-polylinedecorator/longArrowHead.js" %}"></script>
+  {% with "components/gentelella/vendors/" as gentelella_static %}
+    <script src="{% static gentelella_static|add:"iCheck/icheck.min.js" %}"></script>
+  {% endwith %}
   <script>
     $(document).ready(function() { 
        var currentHour = '';
        var currentDayType = '';
-       var layers = {};
+	   var colors = {}; // dict
+	   var groups = {}; // dict
+	   var layers = {}; // element: {name, layer}
+
+	   function categorizeSection(layer, color, group, name) {
+	     if (!colors[color]){
+		   colors[color] = [];
+	     }
+         colors[color].push(layer);
+
+	     if (!groups[group]){
+		   groups[group] = [];
+	     }
+		 groups[group].push(layer);
+
+		 if (!layers[name]){
+           layers[name] = [];
+		 }
+		 layers[name].push(layer);
+	   }
+
+	   function cleanCategorizedSections() {
+         colors = {};
+         groups = {};
+         layers = {};
+	   }
+
+	   function cleanMap() {
+	     // remove currents layers from map
+         $.each(layers, function(name, layerList) {
+           $.each(layerList, function(i, layer) {
+             map.removeLayer(layer);
+           });
+         });
+	   }
 
        /**
         * SET MAP
@@ -65,7 +118,6 @@
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
        var blackLayer = L.tileLayer(blackStyle, {attribution: attribution});
        blackLayer.addTo(map);
-       var mapControl = L.control.layers({}, {}).addTo(map);
 
        // color for line
        function getColor(d) {
@@ -80,6 +132,39 @@
        /**
         * DEFINE FILTER
         */
+	   var modalContent = 
+	  '<div class="col-md-12 col-sm-12 col-xs-12">' +
+		'<div class="x_panel">' +
+		  '<div class="x_title">' +
+		    '<h2><i class="fa fa-filter"></i> Filtro</h2>' +
+		    '<div class="clearfix"></div>' +
+		  '</div>' +
+		  '<div class="x_content">' +
+			'<div class="" id="window" role="tabpanel" data-example-id="togglable-tabs">'+
+              '<ul id="filterTab" class="nav nav-tabs bar_tabs" role="tablist">'+
+                '<li role="presentation" class="active"><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#groupContentPanel" role="tab" id="groupTab" data-toggle="tab" aria-expanded="false">Grupos</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
+                '</li>'+
+              '</ul>'+
+              '<div id="myTabContent" class="tab-content">'+
+                '<div role="tabpanel" class="tab-pane fade in active" id="listContentPanel" aria-labelledby="home-tab">'+
+				  '<div class="form-group"><div class="col-md-12 col-sm-12 col-xs-12"><div id="listContent"></div></div></div>'+
+                '</div>'+
+                '<div role="tabpanel" class="tab-pane fade" id="groupContentPanel" aria-labelledby="profile-tab">'+
+                  '<div id="groupContent"></div>'+
+                '</div>'+
+                '<div role="tabpanel" class="tab-pane fade" id="colorContentPanel" aria-labelledby="profile2-tab">'+
+                  '<div id="colorContent"></div>'+
+                '</div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
        L.easyButton({
          position: 'topright',
          states: [{
@@ -87,15 +172,72 @@
            icon: 'fa-filter fa-lg', 
            onClick: function(btn, map) {
              var win = L.control.window(map, {
-               title:'Filtro de tramos', 
-               content:'A continuación se muestran tres tipos de filtros: por eje, grupo o categoría',
+               content: modalContent,
+			   closeButton: false,
                modal: true,
-               position: 'top'
-               }).prompt({
-                 callback: function(){
-				   alert('heloo!!!');
-				 }
-               }).show()
+               position: 'top',
+			   }).prompt({
+                 callback: function() {
+                   // make filter
+				   
+				   // first: we need to know active tab
+				   var tab = $('#filterTab li.active a').attr('id');
+				   switch(tab) {
+                     case 'listTab':
+					   var id = 'listContent';
+					   var source = layers;
+					   break;
+                     case 'groupTab':
+					   var id = 'groupContent';
+					   var source = groups;
+					   break;
+                     case 'colorTab':
+					   var id = 'colorContent';
+					   var source = colors;
+                       break;
+				   }
+		           var nameList = $('#'+id+' div label').children(':checked').map(function(i, e){
+			         return $(this).data('name');
+				   });
+				   var filteredLayers = [];
+				   $.each(source, function(name, layerList){
+				     if ($.inArray(name, nameList)>=0) {
+                       filteredLayers.push(layerList);
+					 }
+				   });
+                   updateMap(filteredLayers, currentHour, currentDayType);
+                 }
+               });
+			 win.addEventListener("show", function(){
+			   // activate tabs
+			   $('.nav-tabs a').click(function(e){
+			     e.preventDefault();
+			     $(this).tab('show');
+			   });
+			   // fill each category
+
+			   // axis
+			   $('#listContent').empty();
+               $.each(layers, function(name, layer){
+	             var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"' /> "+name+"</label></div>";
+				 $('#listContent').append(html);
+			   });
+
+			   // groups
+			   $('#groupContent').empty();
+			   $.each(groups, function(name, elements){
+			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"'/> " + name + "(" + elements.length + " tramos)</label></div>";
+				 $('#groupContent').append(html);
+			   });
+
+			   // colors
+               $('#colorContent').empty();
+			   $.each(colors, function(color, elements){
+			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+color+"'/> <i class='filterColor' style='background:" + color + "'></i> (" + elements.length + " tramos)</label></div>";
+				 $('#colorContent').append(html);
+			   });
+			 });
+			 win.show();
            }
          }]
        }).addTo(map);
@@ -154,7 +296,7 @@
         legend.addTo(map);
 
        /**
-        * DEFINE HOUR
+        * DEFINE HOUR CONTROL
         */
         var hourControl = L.control({position: 'topleft'});
         hourControl.onAdd = function (map) {
@@ -165,7 +307,7 @@
         hourControl.addTo(map);
 
        /**
-        * DEFINE DAY TYPE
+        * DEFINE DAY TYPE CONTROL
         */
         var dayTypeControl = L.control({position: 'topleft'});
         dayTypeControl.onAdd = function (map) {
@@ -175,16 +317,38 @@
         }; 
         dayTypeControl.addTo(map);
 
-        /**
-         * DEFINE DRAW FUNCTIONS 
-         */
-        function drawPolylineDecorator(name, street) {
-                     
-          var overlay = L.featureGroup([]);
-          var streetName = name;
-          var streetTime = street.time
+        function updateMap(streetLayers, hour, dayType) {
+             
+		  cleanMap();
 
-          $.each(street.sections, function(i, section){
+          // update map info
+          $('#hourInfo').text(hour);
+          $('#dayType').text(dayType);
+
+          var bounds = null;
+ 
+          // add layers to map and control
+          $.each(streetLayers, function(i, layerList){
+            $.each(layerList, function(i, layer){
+              if (!bounds) {
+                bounds = layer.getBounds();
+              } else {
+                bounds = bounds.extend(layer.getBounds());
+              }
+              layer.addTo(map);
+            });
+          });
+
+          map.fitBounds(bounds);
+        };
+
+        /**
+         * CREATE OVERLAYS 
+         */
+		function generateOverlays(name, street) {
+          
+          $.each(street.sections, function(i, section) {
+
             var latLngs = [];
             var metrics = section.segxkm.toFixed(1);
             var group = section.group;
@@ -192,37 +356,41 @@
             var points = section.points;
             var origin = section.originStreet;
             var destination = section.destinationStreet;
-                            
-            // order by distOnRoute
+            
+            // order points by distOnRoute
             points.sort(function(a, b) {
               return a.distOnRoute - b.distOnRoute;
             });
     
-            $.each(points, function(i2, point){
+			// populate positions
+            $.each(points, function(i2, point) {
               latLngs.push([point.latitude, point.longitude]);
             });
 
             var line = L.polyline(latLngs, {color: getColor(metrics)});
-            overlay.addLayer(line);
+
             var patternsOpts = [
               // defines a pattern of 10px-wide dashes, repeated every 20px on the line
-              {offset: 10, endOffset: 5, repeat: '5%', symbol: 
-                L.Symbol.longArrowHead({rotate: true,
-                //L.Symbol.arrowHead({rotate: true,
-                  pixelSize: 5, 
-                  polygon: true, 
-                  pathOptions: {
-                    color: getColor(metrics), 
-                    stroke: false,
-                    fillColor: getColor(metrics),
-                    fillOpacity: 1.0
-                  }
-              })}
+              {offset: 10, 
+               endOffset: 5,  
+			   repeat: '5%', 
+			   symbol: L.Symbol.longArrowHead({
+                 rotate: true,
+                 pixelSize: 5, 
+                 polygon: true, 
+                 pathOptions: {
+                   color: getColor(metrics), 
+                   stroke: false,
+                   fillColor: getColor(metrics),
+                   fillOpacity: 1.0
+                 }
+               })
+			  }
             ]
+            var decorator = L.polylineDecorator(line, {patterns: patternsOpts});
 
-            var decorator = L.polylineDecorator(line, {
-              patterns: patternsOpts                          
-            });
+			//********************************************************/
+            // set bubble
             var text = metrics + " seg/km";
             if (metrics <=0) {
               text = 'Falta info.';
@@ -230,7 +398,6 @@
             var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
             decorator.bindPopup(message);
             line.bindPopup(message);
-            overlay.addLayer(decorator);
 
             //********************************************************/
             // animation
@@ -244,116 +411,45 @@
               arrowOffset = arrowOffset + (3600/metrics/3.6)/3;
             }, 50);
             //********************************************************/
-            });
-                        
+            
+			// create overlay
+            var overlay = L.featureGroup([]);
+            overlay.addLayer(line);
+            overlay.addLayer(decorator);
+
+	        categorizeSection(overlay, getColor(metrics), group, name);
+
             console.log("Map updated with polyline decorator");
+          });
+		}
 
-            return overlay;
-          };
+        function downloadData() {
+          $.ajax({
+            url: "getStreetData",
+            success: function(data){
 
-          //var POIsOverlay = L.layerGroup([]);
-          //POIsOverlay.addTo(map);
-          //mapControl.addOverlay(POIsOverlay, 'POIs');
-          /*
-          function drawPOIs(data) {
-                    
-            POIsOverlay.clearLayers();
-
-            $.each(data, function(i, poi){
-              var paramName = "Nombre: " + poi.name;
-              //var paramOrigin = "Origen: " + poi.origin;
-              //var paramDestination = "Destino: " + poi.destination;
-              var paramZone = "Zona: " + poi.zone;
-              //var paramStreet = "Calle: " + poi.street;
-              var params = [];
-              params.push(paramName);
-              //params.push(paramOrigin);
-              //params.push(paramDestination);
-              params.push(paramZone);
-              //params.push(paramStreet);
-              params = params.join("<br />");
-
-              var marker = L.marker([poi.latitude, poi.longitude], {
-                icon: L.icon({
-                  iconUrl: 'http://icons.iconarchive.com/icons/custom-icon-design/mono-business/16/target-icon.png',
-                  iconSize: [16, 16]
-                })
-              }).bindPopup("<p>" + params + "</p>");
-              POIsOverlay.addLayer(marker);
-            });
-
-            console.log("Map updated with POIs");
-          }*/
-
-          var groupPanelData = {};
-          var updateMap = function(data, hour, dayType){
-             
-            // update map
-            $('#hourInfo').text(hour);
-            $('#dayType').text(dayType);
-
-            // remove currents layers from map
-            $.each(layers, function(i, l){
-              map.removeLayer(l.layer);
-              mapControl.removeLayer(l.layer);
-            });
-            layers = [];
-            var bounds = null;
- 
-            // each zone
-            $.each(data, function(zone, streets) {
-              // draw street
-              $.each(streets, function(name, street) {
-                var layer = drawPolylineDecorator(name, street);
-                layers.push({
-                  name: name,
-                  layer: layer
-                });
-                if (!bounds) {
-                  bounds = layer.getBounds();
-                } else {
-                  bounds = bounds.extend(layer.getBounds());
-                }
-              });
-            });
-
-            // add layers to map and control
-            $.each(layers, function(i, l){
-              l.layer.addTo(map);
-              mapControl.addOverlay(l.layer, l.name);
-            });
-
-            map.fitBounds(bounds);
-          };
-
-          var streetsData = {};
-          
-          function downloadData() {
-            $.ajax({
-              url: "getStreetData",
-              success: function(data){
-
-                // Add option to see all streets together
-                var all = {};
-                $.each(data.Destination, function(i,origin){
+              if (currentHour != data.hour) {
+                // merge streets
+                var streets = {};
+                $.each(data.Destination, function(i, origin){
                   $.each(origin, function(i,v){
-                    all = $.extend(all, v);
+                    streets = $.extend(streets, v);
                   });
                 });
-                streetsData = data.Destination;
-                streetsData = $.extend(data.Destination,{'Todos': {'Todos': all}});
-         
-                if (currentHour != data.hour) {
-                  currentHour = data.hour
-                  currentDayType = data.dayType
-                  updateMap(streetsData['Todos'], currentHour, currentDayType);
-                }
+                currentHour = data.hour
+                currentDayType = data.dayType
+                cleanCategorizedSections();
+                $.each(streets, function(name, street) {
+                  generateOverlays(name, street);
+                });
+                updateMap(layers, currentHour, currentDayType);
               }
-            });
-          };
-          downloadData();
-          setInterval(downloadData, 5*1000);
-        });
+            }
+          });
+        };
+        downloadData();
+        setInterval(downloadData, 5*1000);
+      });
   </script>
 
 {% endblock %}

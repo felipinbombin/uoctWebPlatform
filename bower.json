@@ -20,6 +20,6 @@
     "leaflet": "^1.0.3",
     "leaflet-polylinedecorator": "^1.1.0",
     "Leaflet.EasyButton": "^2.2.0",
-    "leaflet-control-window": "*"
+    "leaflet-control-window": "https://github.com/felipinbombin/leaflet-control-window.git#^0.0.1"
   }
 }
