@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.db import connection
 import datetime as dt
 
-from velocity.models import Tramos15MinUOCT, OrigenYDestinoEjes15MinUOCT
+from velocity.models import Tramos15MinUOCT
 
 # Create your views here.
 
@@ -17,6 +17,18 @@ class StreetVelocityMapHandler(View):
 
     def get(self, request):
         template = "velocity/map.html"
+
+        return render(request, template, self.context)
+
+class StreetVelocityDiffMapHandler(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request):
+        template = "velocity/mapDiff.html"
 
         return render(request, template, self.context)
 
@@ -91,16 +103,16 @@ class GetStreetData(View):
 
         return JsonResponse(response, safe=False)
 
-class GetPOIData(View):
-    '''This class requests to the database the street limits '''
+class GetStreetDiffData(View):
+    '''This class requests to the database the street secction with travel time '''
 
     def __init__(self):
         """the contructor, context are the parameter given to the html template"""
         self.context={}
 
     def get(self, request):
-        """ the {quantity} bus stops with most waiting time for a bus """
-        points = OrigenYDestinoEjes15MinUOCT.objects.all().order_by('eje')
+        """ streets data """
+        points = Tramos15MinUOCT.objects.all().order_by('eje', 'tramo', 'dist_en_ruta')
 
         dest = 'Destination'
         response = {}
@@ -111,18 +123,41 @@ class GetPOIData(View):
             if not point.zona in response[dest][point.destino]:
                 response[dest][point.destino][point.zona] = {}
             if not point.eje in response[dest][point.destino][point.zona]:
-                response[dest][point.destino][point.zona][point.eje] = []
+                street = {}
+                street['origin'] = point.hito_origen
+                street['destination'] = point.hito_destino
+                street['sections'] = {}
+                response[dest][point.destino][point.zona][point.eje] = street
+             
+            if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
+                section = {}
+                section['originStreet'] = point.calle_origen
+                section['destinationStreet'] = point.calle_destino
+                section['nObs'] = point.nobs
+                section['group'] = point.grupo
+                section['diff'] = point.diferencia_referencia
+                section['points'] = []
+                response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
 
-            aux = {}
-            aux['origin'] = point.hito_origen
-            aux['destination'] = point.hito_destino
-            aux['name'] = point.nombre
-            aux['latitude'] = point.latitud
-            aux['longitude'] = point.longitud
- 
-            response[dest][point.destino][point.zona][point.eje].append(aux)
+            response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo]['points'].append({
+                'distOnRoute': point.dist_en_ruta, 
+                'latitude': point.latitud, 
+                'longitude': point.longitud})
+
+        hour = None
+        dayType = None
+        if point:
+            delta = dt.timedelta(minutes=15)
+            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
+            hour = "{}-{}".format(point.periodo15, upperTimeLimit)
+            dayType = point.tipo_dia
+
+        response['hour'] = hour
+        response['dayType'] = dayType
 
         return JsonResponse(response, safe=False)
+
+
 
 class GetStreetTableData(View):
     ''' '''

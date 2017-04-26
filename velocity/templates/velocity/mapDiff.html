@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mapa{% endblock %}
+
+{% block css %}
+  <!-- leaflet -->
+  <link rel="stylesheet" href="{% static "components/leaflet/dist/leaflet.css" %}">
+  <link rel="stylesheet" href="{% static "components/Leaflet.EasyButton/src/easy-button.css" %}">
+  <link rel="stylesheet" href="{% static "components/leaflet-control-window/src/L.Control.Window.css" %}">
+  {% with "components/gentelella/vendors/" as gentelella_static %}
+    <link href="{% static gentelella_static|add:"iCheck/skins/flat/green.css" %}">
+  {% endwith %}
+  <style>
+    .info {
+      padding: 6px 8px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      background: white;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
+    } 
+    .info h4 {
+      margin: 0 0 5px;
+      color: #777;
+    }
+
+    .legend {
+      line-height: 18px;
+      color: #555;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.8;
+    }
+
+    .filterColor {
+      width: 18px;
+      height: 18px;
+      float: right;
+      margin-right: 8px;
+      opacity: 1.0;
+    }
+
+	.nav_menu {
+      margin-bottom: 0;
+	}
+  </style>
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+{% block js %}
+  
+  <script src="{% static "components/leaflet/dist/leaflet.js" %}"></script>
+  <script src="{% static "components/leaflet-polylinedecorator/leaflet.polylineDecorator.js" %}"></script>
+  <script src="{% static "components/Leaflet.EasyButton/src/easy-button.js" %}"></script>
+  <script src="{% static "components/leaflet-control-window/src/L.Control.Window.js" %}"></script>
+  <script src="{% static "own/leaflet-polylinedecorator/longArrowHead.js" %}"></script>
+  {% with "components/gentelella/vendors/" as gentelella_static %}
+    <script src="{% static gentelella_static|add:"iCheck/icheck.min.js" %}"></script>
+  {% endwith %}
+  <script>
+    $(document).ready(function() { 
+       var currentHour = '';
+       var currentDayType = '';
+	   var colors = {}; // dict
+	   var groups = {}; // dict
+	   var layers = {}; // element: {name, layer}
+
+	   function categorizeSection(layer, color, group, name) {
+	     if (!colors[color]){
+		   colors[color] = [];
+	     }
+         colors[color].push(layer);
+
+	     if (!groups[group]){
+		   groups[group] = [];
+	     }
+		 groups[group].push(layer);
+
+		 if (!layers[name]){
+           layers[name] = [];
+		 }
+		 layers[name].push(layer);
+	   }
+
+	   function cleanCategorizedSections() {
+         colors = {};
+         groups = {};
+         layers = {};
+	   }
+
+	   function cleanMap() {
+	     // remove currents layers from map
+         $.each(layers, function(name, layerList) {
+           $.each(layerList, function(i, layer) {
+             map.removeLayer(layer);
+           });
+         });
+	   }
+
+       /**
+        * SET MAP
+        */
+       var beauchefLocation = L.latLng(-33.457910, -70.663869);
+       var mapid = $(".right_col")[0];
+       var map = L.map(mapid, {
+         editable: true,
+         closePopupOnClick: false
+       }).setView(beauchefLocation, 13);
+       var blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+       var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                         'Imagery © <a href="http://mapbox.com">Mapbox</a>';
+       var blackLayer = L.tileLayer(blackStyle, {attribution: attribution});
+       blackLayer.addTo(map);
+
+       // color for line
+       function getColor(d) {
+         return d <  0   ? '#c4c4c4' :
+                d <= 180 ? '#59F000' :
+                d <= 240 ? '#F1FE00' :
+                d <= 300 ? '#FF7400' :
+                d <= 360 ? '#FF0000' :
+                           '#68266F';
+       };
+
+       /**
+        * DEFINE FILTER
+        */
+	   var modalContent = 
+	  '<div class="col-md-12 col-sm-12 col-xs-12">' +
+		'<div class="x_panel">' +
+		  '<div class="x_title">' +
+		    '<h2><i class="fa fa-filter"></i> Filtro</h2>' + 
+		    '<div class="clearfix"></div>' +
+		  '</div>' +
+		  '<div class="x_content">' +
+			'<div class="" id="window" role="tabpanel" data-example-id="togglable-tabs">'+
+              '<ul id="filterTab" class="nav nav-tabs bar_tabs" role="tablist">'+
+                '<li role="presentation" class="active"><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#groupContentPanel" role="tab" id="groupTab" data-toggle="tab" aria-expanded="false">Grupos</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
+                '</li>'+
+              '</ul>'+
+              '<div id="myTabContent" class="tab-content">'+
+                '<div role="tabpanel" class="tab-pane fade in active" id="listContentPanel" aria-labelledby="home-tab">'+
+				  '<div class="form-group"><div class="col-md-12 col-sm-12 col-xs-12"><div id="listContent"></div></div></div>'+
+                '</div>'+
+                '<div role="tabpanel" class="tab-pane fade" id="groupContentPanel" aria-labelledby="profile-tab">'+
+                  '<div id="groupContent"></div>'+
+                '</div>'+
+                '<div role="tabpanel" class="tab-pane fade" id="colorContentPanel" aria-labelledby="profile2-tab">'+
+                  '<div id="colorContent"></div>'+
+                '</div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+       L.easyButton({
+         position: 'topright',
+         states: [{
+           stateName: 'filter',
+           icon: 'fa-filter fa-lg', 
+           onClick: function(btn, map) {
+             var win = L.control.window(map, {
+               content: modalContent,
+			   closeButton: false,
+               modal: true,
+               position: 'top',
+			   }).prompt({
+                 callback: function() {
+                   // make filter
+				   
+				   // first: we need to know active tab
+				   var tab = $('#filterTab li.active a').attr('id');
+				   switch(tab) {
+                     case 'listTab':
+					   var id = 'listContent';
+					   var source = layers;
+					   break;
+                     case 'groupTab':
+					   var id = 'groupContent';
+					   var source = groups;
+					   break;
+                     case 'colorTab':
+					   var id = 'colorContent';
+					   var source = colors;
+                       break;
+				   }
+		           var nameList = $('#'+id+' div label').children(':checked').map(function(i, e){
+			         return $(this).data('name');
+				   });
+				   var filteredLayers = [];
+				   $.each(source, function(name, layerList){
+				     if ($.inArray(name, nameList)>=0) {
+                       filteredLayers.push(layerList);
+					 }
+				   });
+                   updateMap(filteredLayers, currentHour, currentDayType);
+                 }
+               });
+			 win.addEventListener("show", function(){
+			   // activate tabs
+			   $('.nav-tabs a').click(function(e){
+			     e.preventDefault();
+			     $(this).tab('show');
+			   });
+			   // fill each category
+
+			   // axis
+			   $('#listContent').empty();
+               $.each(layers, function(name, layer){
+	             var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"' /> "+name+"</label></div>";
+				 $('#listContent').append(html);
+			   });
+
+			   // groups
+			   $('#groupContent').empty();
+			   $.each(groups, function(name, elements){
+			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"'/> " + name + "(" + elements.length + " tramos)</label></div>";
+				 $('#groupContent').append(html);
+			   });
+
+			   // colors
+               $('#colorContent').empty();
+			   $.each(colors, function(color, elements){
+			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+color+"'/> <i class='filterColor' style='background:" + color + "'></i> (" + elements.length + " tramos)</label></div>";
+				 $('#colorContent').append(html);
+			   });
+			 });
+			 win.show();
+           }
+         }]
+       }).addTo(map);
+
+       /**
+        * DEFINE LEGEND
+        */
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+          grades = [0, 180, 240, 300, 360],
+          labels = [];
+
+          div.innerHTML += '<h4>seg/km</h4>';
+
+          // loop through our density intervals and generate a label with a colored square for each interval
+          for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+              '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+          }
+
+          return div;
+        }; 
+        legend.addTo(map);
+
+       /**
+        * DEFINE HOUR CONTROL
+        */
+        var hourControl = L.control({position: 'topleft'});
+        hourControl.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info hour');
+          div.innerHTML = '<i class="fa fa-clock-o fa-lg" aria-hdden="true"></i> <span id="hourInfo"></span>';
+          return div;
+        }; 
+        hourControl.addTo(map);
+
+       /**
+        * DEFINE DAY TYPE CONTROL
+        */
+        var dayTypeControl = L.control({position: 'topleft'});
+        dayTypeControl.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info day');
+          div.innerHTML = '<i class="fa fa-calendar-o fa-lg" aria-hdden="true"></i> <span id="dayType"></span>';
+          return div;
+        }; 
+        dayTypeControl.addTo(map);
+
+        function updateMap(streetLayers, hour, dayType) {
+             
+		  cleanMap();
+
+          // update map info
+          $('#hourInfo').text(hour);
+          $('#dayType').text(dayType);
+
+          var bounds = null;
+ 
+          // add layers to map and control
+          $.each(streetLayers, function(i, layerList){
+            $.each(layerList, function(i, layer){
+              if (!bounds) {
+                bounds = layer.getBounds();
+              } else {
+                bounds = bounds.extend(layer.getBounds());
+              }
+              layer.addTo(map);
+            });
+          });
+
+          map.fitBounds(bounds);
+        };
+
+        /**
+         * CREATE OVERLAYS 
+         */
+		function generateOverlays(name, street) {
+          
+          $.each(street.sections, function(i, section) {
+
+            var latLngs = [];
+            var metrics = section.diff;
+            var group = section.group;
+            var nObs = section.nObs;
+            var points = section.points;
+            var origin = section.originStreet;
+            var destination = section.destinationStreet;
+            
+            // order points by distOnRoute
+            points.sort(function(a, b) {
+              return a.distOnRoute - b.distOnRoute;
+            });
+    
+			// populate positions
+            $.each(points, function(i2, point) {
+              latLngs.push([point.latitude, point.longitude]);
+            });
+
+            var line = L.polyline(latLngs, {color: getColor(metrics)});
+
+            var patternsOpts = [
+              // defines a pattern of 10px-wide dashes, repeated every 20px on the line
+              {offset: 10, 
+               endOffset: 5,  
+			   repeat: '5%', 
+			   symbol: L.Symbol.longArrowHead({
+                 rotate: true,
+                 pixelSize: 5, 
+                 polygon: true, 
+                 pathOptions: {
+                   color: getColor(metrics), 
+                   stroke: false,
+                   fillColor: getColor(metrics),
+                   fillOpacity: 1.0
+                 }
+               })
+			  }
+            ]
+            var decorator = L.polylineDecorator(line, {patterns: patternsOpts});
+
+			//********************************************************/
+            // set bubble
+            var text = metrics + " seg/km";
+            if (metrics <=0) {
+              text = 'Falta info.';
+            }
+            var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
+            decorator.bindPopup(message);
+            line.bindPopup(message);
+
+            //********************************************************/
+            // animation
+            var arrowOffset = 0;
+            patternsOpts[0].repeat = 0;
+            var anim = window.setInterval(function() {
+              patternsOpts[0].offset = arrowOffset + '%';
+              decorator.setPatterns(patternsOpts);
+              if(arrowOffset > 100)
+                arrowOffset = 0;
+              arrowOffset = arrowOffset + (3600/metrics/3.6)/3;
+            }, 50);
+            //********************************************************/
+            
+			// create overlay
+            var overlay = L.featureGroup([]);
+            overlay.addLayer(line);
+            overlay.addLayer(decorator);
+
+	        categorizeSection(overlay, getColor(metrics), group, name);
+
+            console.log("Map updated with polyline decorator");
+          });
+		}
+
+        function downloadData() {
+          $.ajax({
+            url: "getStreetDiffData",
+            success: function(data){
+
+              if (currentHour != data.hour) {
+                // merge streets
+                var streets = {};
+                $.each(data.Destination, function(i, origin){
+                  $.each(origin, function(i,v){
+                    streets = $.extend(streets, v);
+                  });
+                });
+                currentHour = data.hour
+                currentDayType = data.dayType
+                cleanCategorizedSections();
+                $.each(streets, function(name, street) {
+                  generateOverlays(name, street);
+                });
+                updateMap(layers, currentHour, currentDayType);
+              }
+            }
+          });
+        };
+        downloadData();
+        setInterval(downloadData, 5*1000);
+      });
+  </script>
+
+{% endblock %}

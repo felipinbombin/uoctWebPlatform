@@ -27,23 +27,10 @@ class Tramos15MinUOCT(models.Model):
     grupo = models.CharField(max_length=200, blank=True, null=True)
     periodo15 = models.TimeField(blank=True, null=True)
     tipo_dia = models.CharField(max_length=200, blank=True, null=True)
+    diferencia_referencia = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'tramos_15min_uoct'
         unique_together = (('tramo', 'eje', 'dist_en_ruta'),)
-
-class OrigenYDestinoEjes15MinUOCT(models.Model):
-    eje = models.CharField(max_length=200, blank=True, null=True)
-    hito_origen = models.CharField(max_length=200, blank=True, null=True)
-    hito_destino = models.CharField(max_length=200, blank=True, null=True)
-    zona = models.CharField(max_length=200, blank=True, null=True)
-    destino = models.CharField(max_length=200, blank=True, null=True)
-    nombre = models.CharField(max_length=200, blank=True, null=True)
-    latitud = models.FloatField(blank=True, null=True)
-    longitud = models.FloatField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'origen_y_destino_ejes_15_min_uoct'
 
