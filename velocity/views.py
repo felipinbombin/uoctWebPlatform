@@ -174,10 +174,11 @@ class GetStreetTableData(View):
         for point in points:
             street = {}
             street['axis'] = point.eje_id
-            street['section'] = point.tramo
+            street['section'] = point.secuencia_eje_macro
             street['origin'] = point.calle_origen
             street['destination'] = point.calle_destino
             street['metrics'] = point.segundos_por_km_tramo
+            street['diff'] = point.diferencia_referencia
 
             dataset.append(street)
 

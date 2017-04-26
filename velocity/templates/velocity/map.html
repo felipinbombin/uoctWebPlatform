@@ -40,7 +40,7 @@
     .filterColor {
       width: 18px;
       height: 18px;
-      float: right;
+      float: left;
       margin-right: 8px;
       opacity: 1.0;
     }
@@ -68,6 +68,7 @@
     $(document).ready(function() { 
        var currentHour = '';
        var currentDayType = '';
+	   var source = {}
 	   var colors = {}; // dict
 	   var groups = {}; // dict
 	   var layers = {}; // element: {name, layer}
@@ -114,16 +115,17 @@
          closePopupOnClick: false
        }).setView(beauchefLocation, 13);
        var blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+	   var grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
        var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
-       var blackLayer = L.tileLayer(blackStyle, {attribution: attribution});
+       var blackLayer = L.tileLayer(grayStyle, {attribution: attribution});
        blackLayer.addTo(map);
 
        // color for line
        function getColor(d) {
          return d <  0   ? '#c4c4c4' :
                 d <= 180 ? '#59F000' :
-                d <= 240 ? '#F1FE00' :
+                d <= 240 ? '#c9d802' :
                 d <= 300 ? '#FF7400' :
                 d <= 360 ? '#FF0000' :
                            '#68266F';
@@ -142,21 +144,21 @@
 		  '<div class="x_content">' +
 			'<div class="" id="window" role="tabpanel" data-example-id="togglable-tabs">'+
               '<ul id="filterTab" class="nav nav-tabs bar_tabs" role="tablist">'+
-                '<li role="presentation" class="active"><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
+                '<li role="presentation" class="active"><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
                 '</li>'+
                 '<li role="presentation" class=""><a href="#groupContentPanel" role="tab" id="groupTab" data-toggle="tab" aria-expanded="false">Grupos</a>'+
                 '</li>'+
-                '<li role="presentation" class=""><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
-                '</li>'+
               '</ul>'+
               '<div id="myTabContent" class="tab-content">'+
-                '<div role="tabpanel" class="tab-pane fade in active" id="listContentPanel" aria-labelledby="home-tab">'+
+                '<div role="tabpanel" class="tab-pane fade" id="listContentPanel" aria-labelledby="home-tab">'+
 				  '<div class="form-group"><div class="col-md-12 col-sm-12 col-xs-12"><div id="listContent"></div></div></div>'+
                 '</div>'+
                 '<div role="tabpanel" class="tab-pane fade" id="groupContentPanel" aria-labelledby="profile-tab">'+
                   '<div id="groupContent"></div>'+
                 '</div>'+
-                '<div role="tabpanel" class="tab-pane fade" id="colorContentPanel" aria-labelledby="profile2-tab">'+
+                '<div role="tabpanel" class="tab-pane fade in active" id="colorContentPanel" aria-labelledby="profile2-tab">'+
                   '<div id="colorContent"></div>'+
                 '</div>'+
               '</div>'+
@@ -233,7 +235,7 @@
 			   // colors
                $('#colorContent').empty();
 			   $.each(colors, function(color, elements){
-			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+color+"'/> <i class='filterColor' style='background:" + color + "'></i> (" + elements.length + " tramos)</label></div>";
+			     var html = " <i class='filterColor' style='background:" + color + "'></i> <div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+color+"'/>(" + elements.length + " tramos)</label></div>";
 				 $('#colorContent').append(html);
 			   });
 			 });
@@ -255,9 +257,26 @@
 
           // loop through our density intervals and generate a label with a colored square for each interval
           for (var i = 0; i < grades.length; i++) {
-            div.innerHTML +=
-              '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+		    var color = '';
+			var legend = '';
+			if (i==0) {
+		      color = getColor(grades[i]-1);
+			  legend = ' Sin datos ';
+			  var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+              div.innerHTML += html;
+			}
+			switch (true) {
+			  case (i==grades.length-1):
+				color = getColor(grades[i]+1);
+				legend = ' > ' + grades[i];
+                break;
+			  default: // middle
+				color = getColor(grades[i] + 1)
+				legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
+				break;
+			}
+			var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+            div.innerHTML += html;
           }
 
           return div;
@@ -319,7 +338,7 @@
           $.each(street.sections, function(i, section) {
 
             var latLngs = [];
-            var metrics = section.segxkm.toFixed(1);
+            var metrics = section.segxkm != null ? section.segxkm.toFixed(1) : -1;
             var group = section.group;
             var nObs = section.nObs;
             var points = section.points;
@@ -362,7 +381,7 @@
             // set bubble
             var text = metrics + " seg/km";
             if (metrics <=0) {
-              text = 'Falta info.';
+              text = 'Sin Datos';
             }
             var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
             decorator.bindPopup(message);
@@ -377,7 +396,7 @@
               decorator.setPatterns(patternsOpts);
               if(arrowOffset > 100)
                 arrowOffset = 0;
-              arrowOffset = arrowOffset + (3600/metrics/3.6)/3;
+              arrowOffset = arrowOffset + 1;
             }, 50);
             //********************************************************/
             

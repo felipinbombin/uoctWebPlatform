@@ -114,19 +114,23 @@
          closePopupOnClick: false
        }).setView(beauchefLocation, 13);
        var blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+	   var grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
        var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
-       var blackLayer = L.tileLayer(blackStyle, {attribution: attribution});
+       var blackLayer = L.tileLayer(grayStyle, {attribution: attribution});
        blackLayer.addTo(map);
 
        // color for line
        function getColor(d) {
-         return d <  0   ? '#c4c4c4' :
-                d <= 180 ? '#59F000' :
-                d <= 240 ? '#F1FE00' :
-                d <= 300 ? '#FF7400' :
-                d <= 360 ? '#FF0000' :
-                           '#68266F';
+		 if (d == null) {
+			return '#c4c4c4';
+		 }
+         return d <= -60 ? '#0061ff' :
+                d <= -30 ? '#187200' :
+                d <= 0   ? '#6dff44' :
+                d <= 30  ? '#c9d802' :
+                d <= 60  ? '#ff9400' :
+                           '#fc3d3a';
        };
 
        /**
@@ -142,21 +146,21 @@
 		  '<div class="x_content">' +
 			'<div class="" id="window" role="tabpanel" data-example-id="togglable-tabs">'+
               '<ul id="filterTab" class="nav nav-tabs bar_tabs" role="tablist">'+
-                '<li role="presentation" class="active"><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
+                '<li role="presentation" class="active"><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
+                '</li>'+
+                '<li role="presentation" class=""><a href="#listContentPanel" id="listTab" role="tab" data-toggle="tab" aria-expanded="true">Ejes</a>'+
                 '</li>'+
                 '<li role="presentation" class=""><a href="#groupContentPanel" role="tab" id="groupTab" data-toggle="tab" aria-expanded="false">Grupos</a>'+
                 '</li>'+
-                '<li role="presentation" class=""><a href="#colorContentPanel" role="tab" id="colorTab" data-toggle="tab" aria-expanded="false">Color</a>'+
-                '</li>'+
               '</ul>'+
               '<div id="myTabContent" class="tab-content">'+
-                '<div role="tabpanel" class="tab-pane fade in active" id="listContentPanel" aria-labelledby="home-tab">'+
+                '<div role="tabpanel" class="tab-pane fade" id="listContentPanel" aria-labelledby="home-tab">'+
 				  '<div class="form-group"><div class="col-md-12 col-sm-12 col-xs-12"><div id="listContent"></div></div></div>'+
                 '</div>'+
                 '<div role="tabpanel" class="tab-pane fade" id="groupContentPanel" aria-labelledby="profile-tab">'+
                   '<div id="groupContent"></div>'+
                 '</div>'+
-                '<div role="tabpanel" class="tab-pane fade" id="colorContentPanel" aria-labelledby="profile2-tab">'+
+                '<div role="tabpanel" class="tab-pane fade in active" id="colorContentPanel" aria-labelledby="profile2-tab">'+
                   '<div id="colorContent"></div>'+
                 '</div>'+
               '</div>'+
@@ -248,16 +252,35 @@
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
           var div = L.DomUtil.create('div', 'info legend'),
-          grades = [0, 180, 240, 300, 360],
+          grades = [-60, -30, 0, 30, 60],
           labels = [];
 
           div.innerHTML += '<h4>seg/km</h4>';
+		  var htmlGray = '<i style="background:#c4c4c4"></i> Sin Datos <br>';
+          div.innerHTML += htmlGray;
 
           // loop through our density intervals and generate a label with a colored square for each interval
           for (var i = 0; i < grades.length; i++) {
-            div.innerHTML +=
-              '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+		    var color = '';
+		    var legend = '';
+			if (i==0) {
+		      color = getColor(grades[i]-1);
+			  legend = ' < ' + grades[i];
+			  var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+              div.innerHTML += html;
+			}
+			switch (true) {
+			  case (i==grades.length-1):
+				color = getColor(grades[i]+1);
+				legend = ' > ' + grades[i];
+                break;
+			  default: // middle
+				color = getColor(grades[i] + 1)
+				legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
+				break;
+			}
+			var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+            div.innerHTML += html;
           }
 
           return div;
@@ -362,7 +385,7 @@
             // set bubble
             var text = metrics + " seg/km";
             if (metrics <=0) {
-              text = 'Falta info.';
+              text = 'Sin Datos';
             }
             var message = "<h3>" + text + "</h3><h6>Eje: " + name + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
             decorator.bindPopup(message);
@@ -377,7 +400,7 @@
               decorator.setPatterns(patternsOpts);
               if(arrowOffset > 100)
                 arrowOffset = 0;
-              arrowOffset = arrowOffset + (3600/metrics/3.6)/3;
+              arrowOffset = arrowOffset + 1;
             }, 50);
             //********************************************************/
             

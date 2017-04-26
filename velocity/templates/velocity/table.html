@@ -36,6 +36,7 @@
 		    <th></th>
 		    <th></th>
 		    <th></th>
+		    <th></th>
 		  </thead>
 		</table>
       </div>
@@ -62,6 +63,13 @@
 <script src="{% static gentelella_static|add:"pdfmake/build/vfs_fonts.js" %}"></script>
 {% endwith %}
 <script>
+function numberRender(data, type, row) {
+  var value = data;
+  if (data != null ) {
+    value = data.toFixed(1);
+  }
+  return value;
+}
 function loadTable() {
   $.get('./getStreetTableData', function(data) {
 	var hour = data.hour;
@@ -76,19 +84,20 @@ function loadTable() {
         {extend: 'excel', filename: 'tramo_seg_km'},
         //{extend: 'print', text: 'Imprimir'},
       ],
-      pageLength: 10,
+      pageLength: 20,
       data: dataset,
       language: {
         url: '//cdn.datatables.net/plug-ins/1.10.13/i18n/Spanish.json'
       },
       columns: [
-        { title: 'Eje',     data: 'axis',        searchable: true},
-        { title: 'Tramo',   data: 'section',     searchable: true},
-        { title: 'Origen',  data: 'origin',      searchable: true},
-        { title: 'Destino', data: 'destination', searchable: true},
-        { title: 'seg/km',  data: 'metrics',     searchable: true},
+        { title: 'Eje',                               data: 'axis',        searchable: true},
+        { title: 'Tramo',                             data: 'section',     searchable: true},
+        { title: 'Inicio',                            data: 'origin',      searchable: true},
+        { title: 'Fin',                               data: 'destination', searchable: true},
+        { title: 'Actual (seg/km)',                   data: 'metrics', searchable: true, render: numberRender},
+        { title: 'Diferencia con histórico (seg/km)', data: 'diff',     searchable: true, render: numberRender},
       ],
-      order: [[1, 'asc']],
+      order: [[0, 'asc']],
     });
   });
 };

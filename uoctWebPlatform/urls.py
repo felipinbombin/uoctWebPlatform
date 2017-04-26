@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 
 urlpatterns = [
-    url(r'^$', RedirectView.as_view(url='velocity/map', permanent=True), name="index"),
+    url(r'^$', RedirectView.as_view(url='velocity/timeMap', permanent=True), name="index"),
     #url(r'^admin/', admin.site.urls),
     url(r'^velocity/', include('velocity.urls')),
 ]
