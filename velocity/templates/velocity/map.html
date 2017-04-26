@@ -237,29 +237,52 @@
 			   });
 			   // fill each category
 
+			   function getAttributeUniqueList(attributeName) {
+			     var uniqueOrderedlist = $.map(sourceData, function(element){
+			       return element[attributeName];		   
+			     }).reduce(function(x, y){
+			       if ($.inArray(y, x)>-1) {
+                     return x;
+			       }
+			       x.push(y);
+			       return x;
+			     }, []).sort(function(a, b){
+			       return a.localeCompare(b);
+			     });
+			     return uniqueOrderedlist;
+               }
+
+			   function generateGroupList(divId, attributeName) {
+                 $.each(getAttributeUniqueList(attributeName), function(index, name){
+	               var html = $("<div class='checkbox'><label> " + name + "</label></div>");
+		  		   var checkbox = $("<input type='checkbox' checked='checked' />")
+                   checkbox.change(function(){
+				     if (this.checked) {
+				       $.each(sourceData, function(index, element){
+				         if (name == element.name) {
+                           element.addToMap();
+		                 }
+				       });
+   				     } else {
+				       $.each(sourceData, function(index, element){
+				         if (name == element.name) {
+                           element.removeFromMap();
+		                 }
+				       });
+				     }
+				   });
+				   html.prepend(checkbox);
+				   $('#'+divId).append(html);
+			     });
+			   }
+
 			   // axis
 			   $('#listContent').empty();
-			   function sortByName(a, b) {
-                 return a.name.localeCompare(b.name);
-			   }
-			   sourceData.sort(sortByName);
-               $.each(sourceData, function(index, element){
-			     var checkbox = $("<input type='checkbox' " + (element.visible ? "checked='checked'":"") + " />")
-				 checkbox.change(function(){
-				   if (this.checked) {
-                     element.addToMap();
-				   } else {
-                     element.removeFromMap();
-				   }
-				 });
-	             var html = $("<div class='checkbox'><label> " + element.name + "</label></div>");
-				 html.append(checkbox);
-				 $('#listContent').append(html);
-			   });
+			   generateGroupList('listContent', 'name');
 
 			   // groups
 			   $('#groupContent').empty();
-			   $.each(groups, function(name, elements){
+			   generateGroupList('groupContent', 'group');
 			     var html = "<div class='checkbox'><label><input type='checkbox' class='flat' checked='checked' data-name='"+name+"'/> " + name + "(" + elements.length + " tramos)</label></div>";
 				 $('#groupContent').append(html);
 			   });
