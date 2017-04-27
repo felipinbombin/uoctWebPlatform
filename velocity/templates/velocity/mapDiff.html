@@ -55,7 +55,6 @@
 {% endblock %}
 
 {% block js %}
-
   <script src="{% static "components/leaflet/dist/leaflet.js" %}"></script>
   <script src="{% static "components/leaflet-polylinedecorator/leaflet.polylineDecorator.js" %}"></script>
   <script src="{% static "components/Leaflet.EasyButton/src/easy-button.js" %}"></script>
@@ -84,19 +83,25 @@
            this.visible = false;
            map.removeLayer(this.layer);
          };
+         this.updateLayer = function(layer){
+           if(this.visible){
+             this.removeFromMap();
+             this.layer = layer;
+             this.addToMap();
+           }else{
+             this.layer = layer;
+           }
+         };
        };
 
        function categorizeSection(layer, color, group, name, id) {
          // if id is present in data
          if(dataSource.hasOwnProperty(id)){
            var el = dataSource[id];
-           if(el.visible){
-             el.removeFromMap();
-             el.layer = layer;
-             el.addToMap();
-           }else{
-             el.layer = layer;
-           }
+           el.color = color;
+           el.group = group;
+           el.name = name;
+           el.updateLayer(el.layer);
            return;
          }
 
@@ -161,13 +166,24 @@
        }
 
        function generateGroupList(divId, attrName, sortFunction, htmlGenerator) {
-         $('#' + divId).empty();
          var orderedList = getAttributeUniqueList(attrName, sortFunction);
          $.each(orderedList, function(index, item){
            var attrValue = item.attrValue;
            var frecuency = item.frecuency;
            var html = $(htmlGenerator(attrValue, frecuency));
-           var checkbox = $("<input type='checkbox' class='flat' checked='checked' />")
+           
+           var checkbox = null;
+           var checkboxId = attrValue.replace(/\.|-| |#/g, '');
+           var checkboxExists = $('#'+checkboxId).length ? true:false;
+           if (checkboxExists){
+             checkbox = $('#'+checkboxId);
+             checkbox.next().html(attrValue + " ( " + frecuency + " tramos)");
+             checkbox.off('change');
+           } else {
+             checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />")
+             html.prepend(checkbox);
+             $('#' + divId).append(html);
+           }
            checkbox.change(function(){
              if (this.checked) {
                $.each(dataSource, function(index, element){
@@ -183,9 +199,32 @@
                });
              }
            });
-           html.prepend(checkbox);
-           $('#' + divId).append(html);
          });
+       }
+
+       function updateFilterWindow(){
+         // streets
+         generateGroupList('listContent', 'name', function(a, b){
+           return a.attrValue.localeCompare(b.attrValue);
+         }, function(name, frecuency){
+           return "<div class='checkbox'><label> " + name + " (" + frecuency + " tramos)</label></div>";
+         });
+
+         // groups
+         generateGroupList('groupContent', 'group', function(a, b){
+           return a.attrValue.localeCompare(b.attrValue);
+         }, function(group, frecuency){
+           return "<div class='checkbox'><label> " + group + " (" + frecuency + " tramos)</label></div>";
+         });
+
+         // colors
+         generateGroupList('colorContent', 'color', function(a, b){
+           return getColorPosition(a.attrValue) - getColorPosition(b.attrValue);
+         }, function(color, frecuency){
+           return "<div class='checkbox'><label> (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i></label></div>";
+         });
+
+         console.log('checkboxs info updated');
        }
 
        var modalContent =
@@ -233,33 +272,11 @@
            e.preventDefault();
            $(this).tab('show');
          });
-         // fill each category
 
-         // axis
-		 if ($('#listContent div').length>0){
-		   return;
-		 }
- 
-         // streets
-         generateGroupList('listContent', 'name', function(a, b){
-           return a.attrValue.localeCompare(b.attrValue);
-         }, function(name, frecuency){
-           return "<div class='checkbox'><label> " + name + " (" + frecuency + " tramos)</label></div>";
-         });
-
-         // groups
-         generateGroupList('groupContent', 'group', function(a, b){
-           return a.attrValue.localeCompare(b.attrValue);
-         }, function(group, frecuency){
-           return "<div class='checkbox'><label> " + group + " (" + frecuency + " tramos)</label></div>";
-         });
-
-         // colors
-         generateGroupList('colorContent', 'color', function(a, b){
-           return getColorPosition(a.attrValue) - getColorPosition(b.attrValue);
-         }, function(color, frecuency){
-           return "<div class='checkbox'><label> (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i></label></div>";
-         });
+         // create filter first time it's called
+         if(!$('#listContent div').length){
+           updateFilterWindow();
+         }
        });
 
        L.easyButton({
@@ -341,6 +358,9 @@
           // update map info
           $('#hourInfo').text(hour);
           $('#dayType').text(dayType);
+
+          // update filter
+          updateFilterWindow();
 
           var bounds = null;
 
@@ -451,6 +471,7 @@
                 url: "getDiffMapData",
                 success: function(data){
                   if (currentHour != data.hour) {
+                    console.log('time to update map data');
                     // merge streets
                     var streets = {};
                     $.each(data.Destination, function(i, origin){
@@ -473,7 +494,7 @@
           });
         }
         downloadData();
-        setInterval(downloadData, 1*1000);
+        setInterval(downloadData, 60*1000);
       });
   </script>
 
