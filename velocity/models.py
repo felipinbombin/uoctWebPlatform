@@ -34,3 +34,11 @@ class Tramos15MinUOCT(models.Model):
         db_table = 'tramos_15min_uoct'
         unique_together = (('tramo', 'eje', 'dist_en_ruta'),)
 
+class Status(models.Model):
+    id = models.CharField(primary_key=True, max_length=20)
+    status = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'status'
+

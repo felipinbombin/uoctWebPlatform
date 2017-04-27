@@ -4,11 +4,11 @@ from django.http import JsonResponse
 from django.db import connection
 import datetime as dt
 
-from velocity.models import Tramos15MinUOCT
+from velocity.models import Tramos15MinUOCT, Status
 
 # Create your views here.
 
-class StreetVelocityMapHandler(View):
+class TimeMapHandler(View):
     '''This class manages the map where the street section are shown'''
 
     def __init__(self):
@@ -20,7 +20,7 @@ class StreetVelocityMapHandler(View):
 
         return render(request, template, self.context)
 
-class StreetVelocityDiffMapHandler(View):
+class DiffMapHandler(View):
     '''This class manages the map where the street section are shown'''
 
     def __init__(self):
@@ -33,7 +33,7 @@ class StreetVelocityDiffMapHandler(View):
         return render(request, template, self.context)
 
 
-class StreetTimeTableMapHandler(View):
+class TimeTableMapHandler(View):
     '''  '''
     def __init__(self):
         self.context={}
@@ -44,7 +44,7 @@ class StreetTimeTableMapHandler(View):
         return render(request, template, self.context)
 
 
-class GetStreetData(View):
+class GetTimeMapData(View):
     '''This class requests to the database the street secction with travel time '''
 
     def __init__(self):
@@ -65,18 +65,14 @@ class GetStreetData(View):
                 response[dest][point.destino][point.zona] = {}
             if not point.eje in response[dest][point.destino][point.zona]:
                 street = {}
-                #street['name'] = point.eje
                 street['origin'] = point.hito_origen
                 street['destination'] = point.hito_destino
-                #street['group'] = point.zona
-                #street['zoneGoal'] = point.destino
-                #street['velocity'] = point.velocidad_eje
-                #street['time'] = point.tiempo_viaje_eje
                 street['sections'] = {}
                 response[dest][point.destino][point.zona][point.eje] = street
              
             if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
                 section = {}
+                section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
                 section['originStreet'] = point.calle_origen
                 section['destinationStreet'] = point.calle_destino
                 section['nObs'] = point.nobs
@@ -103,7 +99,7 @@ class GetStreetData(View):
 
         return JsonResponse(response, safe=False)
 
-class GetStreetDiffData(View):
+class GetDiffMapData(View):
     '''This class requests to the database the street secction with travel time '''
 
     def __init__(self):
@@ -131,6 +127,7 @@ class GetStreetDiffData(View):
              
             if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
                 section = {}
+                section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
                 section['originStreet'] = point.calle_origen
                 section['destinationStreet'] = point.calle_destino
                 section['nObs'] = point.nobs
@@ -158,8 +155,7 @@ class GetStreetDiffData(View):
         return JsonResponse(response, safe=False)
 
 
-
-class GetStreetTableData(View):
+class GetTimeTableData(View):
     ''' '''
 
     def __init__(self):
@@ -191,3 +187,21 @@ class GetStreetTableData(View):
             response['hour'] = "{}-{}".format(point.periodo15, upperTimeLimit)
 
         return JsonResponse(response, safe=False)
+
+
+class GetDataStatus(View):
+    ''' '''
+
+    def __init___(self):
+        ''' '''
+        self.context = {}
+
+    def get(self, request):
+        ''' '''
+        obj = Status.objects.get(id='uoct1')
+
+        response = {}
+        response['status'] = obj.status
+
+        return JsonResponse(response, safe=False)
+
