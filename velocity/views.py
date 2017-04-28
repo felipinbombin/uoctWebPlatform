@@ -73,7 +73,7 @@ class GetMapData(View):
             if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
                 section = {}
                 section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
-                section['name'] = point.secuencia_eje_macro
+                section['order'] = point.secuencia_eje_macro
                 section['originStreet'] = point.calle_origen
                 section['destinationStreet'] = point.calle_destino
                 section['nObs'] = point.nobs

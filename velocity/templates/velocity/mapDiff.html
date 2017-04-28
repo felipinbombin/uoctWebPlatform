@@ -231,7 +231,9 @@
       '<div class="col-md-12 col-sm-12 col-xs-12">' +
         '<div class="x_panel">' +
           '<div class="x_title">' +
-            '<h2><i class="fa fa-filter"></i> Filtro</h2>' +
+            '<div class="col-md-12 col-sm-12 col-xs-12"><h2><i class="fa fa-filter"></i> Filtro</h2> </div>' +
+            '<div class="col-md-6 col-sm-6 col-xs-6"><div class="radio"><label class=""><input id="chkAll" type="radio" class="flat" checked="" name="filter"><small> Marcar todos</small></label></div></div>' +
+            '<div class="col-md-6 col-sm-6 col-xs-6"><div class="radio"><label class=""><input id="chkEmpty" type="radio" class="flat"  name="filter"><small> Desmarcar todos</small></label></div></div>' +
             '<div class="clearfix"></div>' +
           '</div>' +
           '<div class="x_content">' +
@@ -266,18 +268,26 @@
          modal: true,
          position: 'top',
        });
-       win.addEventListener("show", function(){
-         // activate tabs
-         $('.nav-tabs a').click(function(e){
-           e.preventDefault();
-           $(this).tab('show');
-         });
-
-         // create filter first time it's called
-         if(!$('#listContent div').length){
-           updateFilterWindow();
-         }
+       // activate tabs
+       $('.nav-tabs a').click(function(e){
+         e.preventDefault();
+         $(this).tab('show');
        });
+       // set all and empty checkbox 
+       $('input[type=radio][name=filter]').change(function () {
+         if ($("input[name='filter']:checked").attr('id') == 'chkAll') {
+           $("input[type=checkbox]").each(function(){
+             this.checked = true;
+             $(this).trigger('change');
+           }); 
+         } 
+         if ($("input[name='filter']:checked").attr('id') == 'chkEmpty') { 
+           $("input[type=checkbox]").each(function(){
+             this.checked = false;
+             $(this).trigger('change');
+           }); 
+         } 
+       }); 
 
        L.easyButton({
          position: 'topright',
@@ -367,7 +377,7 @@
           // add layers to map and control
           $.each(dataSource, function(index, element){
             if (element.visible) {
-              element.layer.addTo(map);
+              element.addToMap();
               if (!bounds) {
                 bounds = element.layer.getBounds();
               } else {
@@ -386,7 +396,7 @@
 
           var latLngs = [];
           var id = section.id;
-		  var order = section.order
+          var order = section.order
           var metrics = section.diff;
           var group = section.group;
           var nObs = section.nObs;
