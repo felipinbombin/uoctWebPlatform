@@ -384,6 +384,7 @@
 
           var latLngs = [];
           var id = section.id;
+		  var order = section.order
           var metrics = section.segxkm != null ? section.segxkm.toFixed(1) : null;
           var group = section.group;
           var nObs = section.nObs;
@@ -429,7 +430,7 @@
           if (metrics == null) {
             text = 'Sin Datos';
           }
-          var message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
+          var message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Tramo: " + order + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
           decorator.bindPopup(message);
           line.bindPopup(message);
 

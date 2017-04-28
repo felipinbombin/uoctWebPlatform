@@ -44,7 +44,7 @@ class TimeTableMapHandler(View):
         return render(request, template, self.context)
 
 
-class GetTimeMapData(View):
+class GetMapData(View):
     '''This class requests to the database the street secction with travel time '''
 
     def __init__(self):
@@ -73,65 +73,12 @@ class GetTimeMapData(View):
             if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
                 section = {}
                 section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
+                section['name'] = point.secuencia_eje_macro
                 section['originStreet'] = point.calle_origen
                 section['destinationStreet'] = point.calle_destino
                 section['nObs'] = point.nobs
                 section['group'] = point.grupo
                 section['segxkm'] = point.segundos_por_km_tramo
-                section['points'] = []
-                response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
-
-            response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo]['points'].append({
-                'distOnRoute': point.dist_en_ruta, 
-                'latitude': point.latitud, 
-                'longitude': point.longitud})
-
-        hour = None
-        dayType = None
-        if point:
-            delta = dt.timedelta(minutes=15)
-            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
-            hour = "{}-{}".format(point.periodo15, upperTimeLimit)
-            dayType = point.tipo_dia
-
-        response['hour'] = hour
-        response['dayType'] = dayType
-
-        return JsonResponse(response, safe=False)
-
-class GetDiffMapData(View):
-    '''This class requests to the database the street secction with travel time '''
-
-    def __init__(self):
-        """the contructor, context are the parameter given to the html template"""
-        self.context={}
-
-    def get(self, request):
-        """ streets data """
-        points = Tramos15MinUOCT.objects.all().order_by('eje', 'tramo', 'dist_en_ruta')
-
-        dest = 'Destination'
-        response = {}
-        response[dest] = {}
-        for point in points:
-            if not point.destino in response[dest]:
-                response[dest][point.destino] = {}
-            if not point.zona in response[dest][point.destino]:
-                response[dest][point.destino][point.zona] = {}
-            if not point.eje in response[dest][point.destino][point.zona]:
-                street = {}
-                street['origin'] = point.hito_origen
-                street['destination'] = point.hito_destino
-                street['sections'] = {}
-                response[dest][point.destino][point.zona][point.eje] = street
-             
-            if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
-                section = {}
-                section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
-                section['originStreet'] = point.calle_origen
-                section['destinationStreet'] = point.calle_destino
-                section['nObs'] = point.nobs
-                section['group'] = point.grupo
                 section['diff'] = point.diferencia_referencia
                 section['points'] = []
                 response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
@@ -153,7 +100,6 @@ class GetDiffMapData(View):
         response['dayType'] = dayType
 
         return JsonResponse(response, safe=False)
-
 
 class GetTimeTableData(View):
     ''' '''
