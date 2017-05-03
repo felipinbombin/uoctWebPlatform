@@ -32,6 +32,17 @@ class DiffMapHandler(View):
 
         return render(request, template, self.context)
 
+class PercDiffMapHandler(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request):
+        template = "velocity/mapPercDiff.html"
+
+        return render(request, template, self.context)
 
 class TimeTableMapHandler(View):
     '''  '''
@@ -53,7 +64,7 @@ class GetMapData(View):
 
     def get(self, request):
         """ streets data """
-        points = Tramos15MinUOCT.objects.all().order_by('eje', 'tramo', 'dist_en_ruta')
+        points = Tramos15MinUOCT.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
 
         dest = 'Destination'
         response = {}
@@ -80,6 +91,7 @@ class GetMapData(View):
                 section['group'] = point.grupo
                 section['segxkm'] = point.segundos_por_km_tramo
                 section['diff'] = point.diferencia_referencia
+                section['percDiff'] = point.coeficiente_referencia
                 section['points'] = []
                 response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
 

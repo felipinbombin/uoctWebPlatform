@@ -28,6 +28,8 @@ class Tramos15MinUOCT(models.Model):
     periodo15 = models.TimeField(blank=True, null=True)
     tipo_dia = models.CharField(max_length=200, blank=True, null=True)
     diferencia_referencia = models.FloatField(blank=True, null=True)
+    visible = models.IntegerField(blank=True, null=True)
+    coeficiente_referencia = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = False
