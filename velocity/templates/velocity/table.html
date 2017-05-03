@@ -37,6 +37,7 @@
 		    <th></th>
 		    <th></th>
 		    <th></th>
+		    <th></th>
 		  </thead>
 		</table>
       </div>
@@ -96,6 +97,7 @@ function loadTable() {
         { title: 'Fin',                               data: 'destination', searchable: true},
         { title: 'Actual (seg/km)',                   data: 'metrics', searchable: true, render: numberRender},
         { title: 'Diferencia con histórico (seg/km)', data: 'diff',     searchable: true, render: numberRender},
+        { title: 'Velocidad referencia', data: 'refVel',     searchable: true, render: numberRender},
       ],
       order: [[0, 'asc']],
     });

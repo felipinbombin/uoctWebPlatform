@@ -133,6 +133,7 @@ class GetTimeTableData(View):
             street['destination'] = point.calle_destino
             street['metrics'] = point.segundos_por_km_tramo
             street['diff'] = point.diferencia_referencia
+            street['refVel'] = point.vel_referencia
 
             dataset.append(street)
 
