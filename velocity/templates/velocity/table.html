@@ -25,7 +25,7 @@
   <div class="col-md-12 col-sm-12 col-xs-12">
     <div class="x_panel">
       <div class="x_title">
-	    <h2>Tramos <small><i class="fa fa-clock-o fa-lg"></i> <span id="hour"></span></small></h2>
+	    <h2>Tiempos <small><i class="fa fa-clock-o fa-lg"></i> <span id="hour"></span></small></h2>
         <div class="clearfix"></div>
       </div>
       <div class="x_content">
@@ -67,7 +67,7 @@
 function numberRender(data, type, row) {
   var value = data;
   if (data != null ) {
-    value = data.toFixed(1);
+    value = Math.round(data*10)/10;
   }
   return value;
 }
@@ -91,13 +91,13 @@ function loadTable() {
         url: '//cdn.datatables.net/plug-ins/1.10.13/i18n/Spanish.json'
       },
       columns: [
-        { title: 'Eje',                               data: 'axis',        searchable: true},
-        { title: 'Tramo',                             data: 'section',     searchable: true},
-        { title: 'Inicio',                            data: 'origin',      searchable: true},
-        { title: 'Fin',                               data: 'destination', searchable: true},
-        { title: 'Actual (seg/km)',                   data: 'metrics', searchable: true, render: numberRender},
-        { title: 'Diferencia con histórico (seg/km)', data: 'diff',     searchable: true, render: numberRender},
-        { title: 'Velocidad referencia', data: 'refVel',     searchable: true, render: numberRender},
+        { title: 'Eje',               data: 'axis',        searchable: true},
+        { title: 'Tramo',             data: 'section',     searchable: true, className: 'text-center'},
+        { title: 'Inicio',            data: 'origin',      searchable: true},
+        { title: 'Fin',               data: 'destination', searchable: true},
+        { title: 'Actual (s/km)',     data: 'metrics',     searchable: true, render: numberRender, className: 'text-center'},
+        { title: 'Referencia (s/km)', data: 'refVel',      searchable: true, render: numberRender, className: 'text-center'},
+        { title: 'Diferencia (s/km)', data: 'diff',        searchable: true, render: numberRender, className: 'text-center'},
       ],
       order: [[0, 'asc']],
     });
