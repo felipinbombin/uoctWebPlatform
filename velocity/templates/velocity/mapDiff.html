@@ -302,7 +302,7 @@
           grades = [-60, -30, 0, 30, 60],
           labels = [];
 
-          div.innerHTML += '<h4>seg/km</h4>';
+          div.innerHTML += '<h4>s/km</h4>';
           var htmlGray = '<i style="background:'+colors[0]+'"></i> Sin Datos <br>';
           div.innerHTML += htmlGray;
 
@@ -437,9 +437,10 @@
 
           //********************************************************/
           // set bubble
-          var text = metrics + " seg/km";
+          var text = metrics + " s/km";
           if (metrics == null) {
             text = 'Sin Datos';
+			nObs = 0;
           }
           var message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Tramo: " + order + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
           decorator.bindPopup(message);
