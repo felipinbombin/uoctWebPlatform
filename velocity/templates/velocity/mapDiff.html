@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="{% static "components/Leaflet.EasyButton/src/easy-button.css" %}">
   <link rel="stylesheet" href="{% static "components/leaflet-control-window/src/L.Control.Window.css" %}">
   {% with "components/gentelella/vendors/" as gentelella_static %}
-    <link href="{% static gentelella_static|add:"iCheck/skins/flat/green.css" %}">
+    <link rel="stylesheet" href="{% static gentelella_static|add:"iCheck/skins/flat/green.css" %}">
   {% endwith %}
   <style>
     .info {
@@ -184,20 +184,19 @@
              html.prepend(checkbox);
              $('#' + divId).append(html);
            }
-           checkbox.change(function(){
-             if (this.checked) {
-               $.each(dataSource, function(index, element){
-                 if (attrValue == element[attrName]) {
-                   element.addToMap();
-                 }
-               });
-             } else {
-               $.each(dataSource, function(index, element){
-                 if (attrValue == element[attrName]) {
-                   element.removeFromMap();
-                 }
-               });
-             }
+           checkbox.on('ifChecked', function(event){
+             $.each(dataSource, function(index, element){
+               if (attrValue == element[attrName]) {
+                 element.addToMap();
+               }
+             });
+           });
+           checkbox.on('ifUnchecked', function(event){
+             $.each(dataSource, function(index, element){
+               if (attrValue == element[attrName]) {
+                 element.removeFromMap();
+               }
+             });
            });
          });
        }
@@ -274,18 +273,12 @@
          $(this).tab('show');
        });
        // set all and empty checkbox 
-       $('input[type=radio][name=filter]').change(function () {
+       $('input[type=radio][name=filter]').on('ifChanged', function (event) {
          if ($("input[name='filter']:checked").attr('id') == 'chkAll') {
-           $("input[type=checkbox]").each(function(){
-             this.checked = true;
-             $(this).trigger('change');
-           }); 
+           $("input[type=checkbox]").iCheck('check');
          } 
          if ($("input[name='filter']:checked").attr('id') == 'chkEmpty') { 
-           $("input[type=checkbox]").each(function(){
-             this.checked = false;
-             $(this).trigger('change');
-           }); 
+           $("input[type=checkbox]").iCheck('uncheck');
          } 
        }); 
 
@@ -371,6 +364,12 @@
 
           // update filter
           updateFilterWindow();
+          $('input.flat').iCheck({
+            labelHover: false,
+            cursor: true,
+            checkboxClass: 'icheckbox_flat-green',
+            radioClass: 'iradio_flat-green',
+          });
 
           var bounds = null;
 
