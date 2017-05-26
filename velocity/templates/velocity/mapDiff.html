@@ -65,8 +65,7 @@
   {% endwith %}
   <script>
     $(document).ready(function() {
-       var currentHour = '';
-       var currentDayType = '';
+	   let makeBounds = true;
        var dataSource = {};
 
        var Element = function(layer, color, group, name) {
@@ -81,7 +80,7 @@
          };
          this.removeFromMap = function() {
            this.visible = false;
-           map.removeLayer(this.layer);
+           this.layer.remove();
          };
          this.updateLayer = function(layer){
            if(this.visible){
@@ -101,7 +100,7 @@
            el.color = color;
            el.group = group;
            el.name = name;
-           el.updateLayer(el.layer);
+           el.updateLayer(layer);
            return;
          }
 
@@ -178,11 +177,18 @@
            if (checkboxExists){
              checkbox = $('#'+checkboxId);
              checkbox.next().html(attrValue + " ( " + frecuency + " tramos)");
-             checkbox.off('change');
+             checkbox.off('ifChecked');
+             checkbox.off('ifUnchecked');
            } else {
              checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />")
              html.prepend(checkbox);
              $('#' + divId).append(html);
+			 checkbox.iCheck({
+               labelHover: false,
+			   cursor: true,
+			   checkboxClass: 'icheckbox_flat-green',
+			   radioClass: 'iradio_flat-green',
+			 });
            }
            checkbox.on('ifChecked', function(event){
              $.each(dataSource, function(index, element){
@@ -273,6 +279,12 @@
          $(this).tab('show');
        });
        // set all and empty checkbox 
+       $('input[type="radio"].flat').iCheck({
+         labelHover: false,
+		 cursor: true,
+		 checkboxClass: 'icheckbox_flat-green',
+		 radioClass: 'iradio_flat-green',
+	   });
        $('input[type=radio][name=filter]').on('ifChanged', function (event) {
          if ($("input[name='filter']:checked").attr('id') == 'chkAll') {
            $("input[type=checkbox]").iCheck('check');
@@ -364,12 +376,6 @@
 
           // update filter
           updateFilterWindow();
-          $('input.flat').iCheck({
-            labelHover: false,
-            cursor: true,
-            checkboxClass: 'icheckbox_flat-green',
-            radioClass: 'iradio_flat-green',
-          });
 
           var bounds = null;
 
@@ -385,7 +391,10 @@
             }
           });
 
-          map.fitBounds(bounds);
+		  if(bounds !== null && makeBounds){
+            map.fitBounds(bounds);
+			makeBounds = false;
+		  }
         };
 
         /**
@@ -481,24 +490,20 @@
               $.ajax({
                 url: "getDiffMapData",
                 success: function(data){
-                  if (currentHour != data.hour) {
-                    console.log('time to update map data');
-                    // merge streets
-                    var streets = {};
-                    $.each(data.Destination, function(i, origin){
-                      $.each(origin, function(i,v){
-                        streets = $.extend(streets, v);
-                      });
+                  console.log('time to update map data');
+                  // merge streets
+                  var streets = {};
+                  $.each(data.Destination, function(i, origin){
+                    $.each(origin, function(i,v){
+                      streets = $.extend(streets, v);
                     });
-                    currentHour = data.hour
-                    currentDayType = data.dayType
-                    $.each(streets, function(streetName, street) {
-                      $.each(street.sections, function(sectionName, section) {
-                        generateOverlays(streetName, sectionName, section);
-                      });
+                  });
+                  $.each(streets, function(streetName, street) {
+                    $.each(street.sections, function(sectionName, section) {
+                      generateOverlays(streetName, sectionName, section);
                     });
-                    updateMap(currentHour, currentDayType);
-                  }
+                  });
+                  updateMap(data.hour, data.dayType);
                 }
               });
             }

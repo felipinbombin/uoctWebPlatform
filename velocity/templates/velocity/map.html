@@ -64,169 +64,274 @@
     <script src="{% static gentelella_static|add:"iCheck/icheck.min.js" %}"></script>
   {% endwith %}
   <script>
+    'use strict';
     $(document).ready(function() {
-       var currentHour = '';
-       var currentDayType = '';
-       var dataSource = {};
 
-       var Element = function(layer, color, group, name) {
+       let Element = function(layer, color, group, name) {
          this.layer = layer;
          this.color = color;
          this.group = group;
          this.name = name;
          this.visible = true;
-         this.addToMap = function() {
+         this.addToMap = function(map) {
            this.layer.addTo(map);
            this.visible = true;
          };
          this.removeFromMap = function() {
            this.visible = false;
-           map.removeLayer(this.layer);
+           this.layer.remove();
          };
-         this.updateLayer = function(layer){
+         this.updateLayer = function(layer, map){
            if(this.visible){
              this.removeFromMap();
              this.layer = layer;
-             this.addToMap();
+             this.addToMap(map);
            }else{
              this.layer = layer;
            }
          };
        };
 
-       function categorizeSection(layer, color, group, name, id) {
-         // if id is present in data
-         if(dataSource.hasOwnProperty(id)){
-           var el = dataSource[id];
-           el.color = color;
-           el.group = group;
-           el.name = name;
-           el.updateLayer(el.layer);
-           return;
+       function App(map, getMetricFunc, getColorFunc, getColorPositionFunc){
+         let _map = map;
+         let _dataSource = {};
+         let _getMetric = getMetricFunc;
+         let _getColor = getColorFunc;
+         let _getColorPosition = getColorPositionFunc;
+		 let _makeBounds = true;
+
+         let _categorizeSection = function(layer, color, group, name, id) {
+           // if id is present in data
+           if(_dataSource.hasOwnProperty(id)){
+             let el = _dataSource[id];
+             el.color = color;
+             el.group = group;
+             el.name = name;
+             el.updateLayer(layer, _map);
+             return;
+           }
+
+           _dataSource[id] = new Element(layer, color, group, name);
          }
 
-         dataSource[id] = new Element(layer, color, group, name);
+         /**
+          * CREATE OVERLAYS
+          */
+         this.generateOverlays = function(streetName, sectionName, section) {
+
+           let latLngs = [];
+           let id = section.id;
+           let order = section.order
+           let metrics = _getMetric(section);
+           let group = section.group;
+           let nObs = section.nObs;
+           let points = section.points;
+           let origin = section.originStreet;
+           let destination = section.destinationStreet;
+
+           // order points by distOnRoute
+           points.sort(function(a, b) {
+             return a.distOnRoute - b.distOnRoute;
+           });
+ 
+           // populate positions
+           $.each(points, function(i2, point) {
+             latLngs.push([point.latitude, point.longitude]);
+           });
+
+           let line = L.polyline(latLngs, {color: _getColor(metrics)});
+
+           let patternsOpts = [
+           // defines a pattern of 10px-wide dashes, repeated every 20px on the line
+           {offset: 10,
+             endOffset: 5,
+             repeat: '5%',
+             symbol: L.Symbol.longArrowHead({
+               rotate: true,
+               pixelSize: 5,
+               polygon: true,
+               pathOptions: {
+                 color: _getColor(metrics),
+                 stroke: false,
+                 fillColor: _getColor(metrics),
+                 fillOpacity: 1.0
+               }
+             })
+           }
+           ]
+           let decorator = L.polylineDecorator(line, {patterns: patternsOpts});
+ 
+           //********************************************************/
+           // set bubble
+           let text = metrics + " s/km";
+           if (metrics == null) {
+             text = 'Sin Datos';
+           }
+           let message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Tramo: " + order + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
+           decorator.bindPopup(message);
+           line.bindPopup(message);
+
+           //********************************************************/
+           // animation
+           let arrowOffset = 0;
+           patternsOpts[0].repeat = 0;
+           let anim = window.setInterval(function() {
+             patternsOpts[0].offset = arrowOffset + '%';
+             decorator.setPatterns(patternsOpts);
+             if(arrowOffset > 100)
+               arrowOffset = 0;
+             arrowOffset = arrowOffset + 1;
+           }, 50);
+           //********************************************************/
+ 
+           // create overlay
+           let overlay = L.featureGroup([]);
+           overlay.addLayer(line);
+           overlay.addLayer(decorator);
+ 
+           _categorizeSection(overlay, _getColor(metrics), group, streetName, id);
+ 
+           console.log("Map updated with polyline decorator");
+         };
+
+         this.updateMap = function(hour, dayType) {
+
+           // update map info
+           $('#hourInfo').text(hour);
+           $('#dayType').text(dayType);
+
+           // update filter
+           this.updateFilterWindow(_getColorPosition);
+
+           let bounds = null;
+
+           // add layers to map and control
+           $.each(_dataSource, function(index, element){
+             if (element.visible){
+               element.addToMap(_map);
+               if (!bounds) {
+                 bounds = element.layer.getBounds();
+               } else {
+                 bounds = bounds.extend(element.layer.getBounds());
+               }
+             }
+           });
+
+           if(bounds !== null && _makeBounds){
+             _map.fitBounds(bounds);
+             _makeBounds = false;
+           }
+         };
+ 
+         /**
+         * DEFINE FILTER
+         */
+         let _getAttributeUniqueList = function(attributeName, sortFunction) {
+           let dict = $.map(_dataSource, function(element, id){
+             return element[attributeName];
+           }).reduce(function(x, y){
+             if (x.hasOwnProperty(y)) {
+               x[y]++;
+               return x;
+             }
+             x[y] = 1;
+             return x;
+           }, {});
+
+           let orderedList = [];
+           $.each(dict, function(attrValue, frecuency){
+             orderedList.push({attrValue:attrValue, frecuency:frecuency});
+           });
+           orderedList.sort(sortFunction);
+           return orderedList;
+         }
+
+         let _generateGroupList = function(divId, attrName, sortFunction, htmlGenerator) {
+           let orderedList = _getAttributeUniqueList(attrName, sortFunction);
+           $.each(orderedList, function(index, item){
+             let attrValue = item.attrValue;
+             let frecuency = item.frecuency;
+             let html = $(htmlGenerator(attrValue, frecuency));
+
+             let checkbox = null;
+             let checkboxId = attrValue.replace(/\.|-| |#/g, '');
+             let checkboxExists = $('#'+checkboxId).length ? true:false;
+             if (checkboxExists){
+               checkbox = $('#'+checkboxId);
+               checkbox.next().html(attrValue + " ( " + frecuency + " tramos)");
+               checkbox.off('ifChecked');
+               checkbox.off('ifUnchecked');
+             } else {
+               checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />");
+               html.prepend(checkbox);
+               $('#' + divId).append(html);
+               checkbox.iCheck({
+                 labelHover: false,
+                 cursor: true,
+                 checkboxClass: 'icheckbox_flat-green',
+                 radioClass: 'iradio_flat-green',
+               });
+             }
+             checkbox.on('ifChecked', function(event){
+               $.each(_dataSource, function(index, element){
+                 if (attrValue == element[attrName]) {
+                   element.addToMap(_map);
+                 }
+               });
+             });
+             checkbox.on('ifUnchecked', function(event){
+               $.each(_dataSource, function(index, element){
+                 if (attrValue == element[attrName]) {
+                   element.removeFromMap();
+                 }
+               });
+             });
+           });
+         };
+
+         this.updateFilterWindow = function(){
+           // streets
+           _generateGroupList('listContent', 'name', function(a, b){
+             return a.attrValue.localeCompare(b.attrValue);
+           }, function(name, frecuency){
+             return "<div class='checkbox'><label> " + name + " (" + frecuency + " tramos)</label></div>";
+           });
+
+           // groups
+           _generateGroupList('groupContent', 'group', function(a, b){
+             return a.attrValue.localeCompare(b.attrValue);
+           }, function(group, frecuency){
+             return "<div class='checkbox'><label> " + group + " (" + frecuency + " tramos)</label></div>";
+           });
+
+           // colors
+           _generateGroupList('colorContent', 'color', function(a, b){
+             return _getColorPosition(a.attrValue) - _getColorPosition(b.attrValue);
+           }, function(color, frecuency){
+             return "<div class='checkbox'><label> (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i></label></div>";
+           });
+
+           console.log('checkboxs info updated');
+         };
        }
 
        /**
         * SET MAP
         */
-       var beauchefLocation = L.latLng(-33.457910, -70.663869);
-       var mapid = $(".right_col")[0];
-       var map = L.map(mapid, {
+       let beauchefLocation = L.latLng(-33.457910, -70.663869);
+       let mapid = $(".right_col")[0];
+       let map = L.map(mapid, {
          editable: true,
          closePopupOnClick: false
        }).setView(beauchefLocation, 13);
-       var blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
-       var grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
-       var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+       let blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+       let grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+       let attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
-       var blackLayer = L.tileLayer(grayStyle, {attribution: attribution});
+       let blackLayer = L.tileLayer(grayStyle, {attribution: attribution});
        blackLayer.addTo(map);
 
-       // color for line
-       var colors = ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F'];
-       function getColorPosition(color) {
-         return $.inArray(color, colors);
-       }
-
-       function getColor(d) {
-         if (d == null){
-           return colors[0];
-         }
-         return d <  0   ? colors[0] :
-                d <= 180 ? colors[1] :
-                d <= 240 ? colors[2] :
-                d <= 300 ? colors[3] :
-                d <= 360 ? colors[4] :
-                           colors[5];
-       };
-
-       /**
-        * DEFINE FILTER
-        */
-       function getAttributeUniqueList(attributeName, sortFunction) {
-         var dict = $.map(dataSource, function(element, id){
-           return element[attributeName];
-         }).reduce(function(x, y){
-           if (x.hasOwnProperty(y)) {
-             x[y]++;
-             return x;
-           }
-           x[y] = 1;
-           return x;
-         }, {});
-
-         var orderedList = [];
-         $.each(dict, function(attrValue, frecuency){
-           orderedList.push({attrValue:attrValue, frecuency:frecuency});
-         });
-         orderedList.sort(sortFunction);
-         return orderedList;
-       }
-
-       function generateGroupList(divId, attrName, sortFunction, htmlGenerator) {
-         var orderedList = getAttributeUniqueList(attrName, sortFunction);
-         $.each(orderedList, function(index, item){
-           var attrValue = item.attrValue;
-           var frecuency = item.frecuency;
-           var html = $(htmlGenerator(attrValue, frecuency));
-
-           var checkbox = null;
-           var checkboxId = attrValue.replace(/\.|-| |#/g, '');
-           var checkboxExists = $('#'+checkboxId).length ? true:false;
-           if (checkboxExists){
-             checkbox = $('#'+checkboxId);
-             checkbox.next().html(attrValue + " ( " + frecuency + " tramos)");
-             checkbox.off('change');
-           } else {
-             checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />");
-             html.prepend(checkbox);
-             $('#' + divId).append(html);
-           }
-           checkbox.on('ifChecked', function(event){ 
-             $.each(dataSource, function(index, element){
-               if (attrValue == element[attrName]) {
-                 element.addToMap();
-               }
-             });
-           });
-           checkbox.on('ifUnchecked', function(event){ 
-             $.each(dataSource, function(index, element){
-               if (attrValue == element[attrName]) {
-                 element.removeFromMap();
-               }
-             });
-           });
-         });
-       }
- 
-       function updateFilterWindow(){
-         // streets
-         generateGroupList('listContent', 'name', function(a, b){
-           return a.attrValue.localeCompare(b.attrValue);
-         }, function(name, frecuency){
-           return "<div class='checkbox'><label> " + name + " (" + frecuency + " tramos)</label></div>";
-         });
-
-         // groups
-         generateGroupList('groupContent', 'group', function(a, b){
-           return a.attrValue.localeCompare(b.attrValue);
-         }, function(group, frecuency){
-           return "<div class='checkbox'><label> " + group + " (" + frecuency + " tramos)</label></div>";
-         });
-
-         // colors
-         generateGroupList('colorContent', 'color', function(a, b){
-           return getColorPosition(a.attrValue) - getColorPosition(b.attrValue);
-         }, function(color, frecuency){
-           return "<div class='checkbox'><label> (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i></label></div>";
-         });
-
-         console.log('checkboxs info updated');
-       }
-
-       var modalContent =
+       let modalContent =
       '<div class="col-md-12 col-sm-12 col-xs-12">' +
         '<div class="x_panel">' +
           '<div class="x_title">' +
@@ -261,7 +366,7 @@
         '</div>'+
       '</div>';
 
-       var win = L.control.window(map, {
+       let win = L.control.window(map, {
          content: modalContent,
          closeButton: true,
          modal: true,
@@ -273,6 +378,12 @@
          $(this).tab('show');
        });
        // set all and empty checkbox
+       $('input[type="radio"].flat').iCheck({
+         labelHover: false,
+         cursor: true,
+         checkboxClass: 'icheckbox_flat-green',
+         radioClass: 'iradio_flat-green',
+       });
        $('input[type=radio][name=filter]').on('ifChanged', function (event) {
          if ($("input[name='filter']:checked").attr('id') == 'chkAll') {
            $("input[type=checkbox]").iCheck('check');
@@ -294,24 +405,64 @@
        }).addTo(map);
 
        /**
+        * DEFINE HOUR CONTROL
+        */
+        let hourControl = L.control({position: 'topleft'});
+        hourControl.onAdd = function (map) {
+          let div = L.DomUtil.create('div', 'info hour');
+          div.innerHTML = '<i class="fa fa-clock-o fa-lg" aria-hdden="true"></i> <span id="hourInfo"></span>';
+          return div;
+        };
+        hourControl.addTo(map);
+
+       /**
+        * DEFINE DAY TYPE CONTROL
+        */
+       let dayTypeControl = L.control({position: 'topleft'});
+       dayTypeControl.onAdd = function (map) {
+         let div = L.DomUtil.create('div', 'info day');
+         div.innerHTML = '<i class="fa fa-calendar-o fa-lg" aria-hdden="true"></i> <span id="dayType"></span>';
+         return div;
+       };
+       dayTypeControl.addTo(map);
+
+       // color for line
+       let colors = ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F'];
+       let getColorPosition = function(color) {
+         return $.inArray(color, colors);
+       };
+
+       let getColor = function(d) {
+         if (d == null){
+           return colors[0];
+         }
+         return d <  0   ? colors[0] :
+                d <= 180 ? colors[1] :
+                d <= 240 ? colors[2] :
+                d <= 300 ? colors[3] :
+                d <= 360 ? colors[4] :
+                           colors[5];
+       };
+
+       /**
         * DEFINE LEGEND
         */
-        var legend = L.control({position: 'bottomright'});
+        let legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info legend'),
+          let div = L.DomUtil.create('div', 'info legend'),
           grades = [0, 180, 240, 300, 360],
           labels = [];
 
           div.innerHTML += '<h4>s/km</h4>';
 
           // loop through our density intervals and generate a label with a colored square for each interval
-          for (var i = 0; i < grades.length; i++) {
-            var color = '';
-            var legend = '';
+          for (let i = 0; i < grades.length; i++) {
+            let color = '';
+            let legend = '';
             if (i==0) {
               color = getColor(grades[i]-1);
               legend = ' Sin datos ';
-              var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+              let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
               div.innerHTML += html;
             }
             switch (true) {
@@ -324,7 +475,7 @@
                 legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
                 break;
             }
-            var html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+            let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
             div.innerHTML += html;
           }
 
@@ -332,140 +483,10 @@
         };
         legend.addTo(map);
 
-       /**
-        * DEFINE HOUR CONTROL
-        */
-        var hourControl = L.control({position: 'topleft'});
-        hourControl.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info hour');
-          div.innerHTML = '<i class="fa fa-clock-o fa-lg" aria-hdden="true"></i> <span id="hourInfo"></span>';
-          return div;
+        let getMetric = function(section){
+          return section.segxkm != null ? section.segxkm.toFixed(1) : null;
         };
-        hourControl.addTo(map);
-
-       /**
-        * DEFINE DAY TYPE CONTROL
-        */
-        var dayTypeControl = L.control({position: 'topleft'});
-        dayTypeControl.onAdd = function (map) {
-          var div = L.DomUtil.create('div', 'info day');
-          div.innerHTML = '<i class="fa fa-calendar-o fa-lg" aria-hdden="true"></i> <span id="dayType"></span>';
-          return div;
-        };
-        dayTypeControl.addTo(map);
-
-        function updateMap(hour, dayType) {
-
-          // update map info
-          $('#hourInfo').text(hour);
-          $('#dayType').text(dayType);
-
-          // update filter
-          updateFilterWindow();
-         $('input.flat').iCheck({
-           labelHover: false,
-           cursor: true,
-           checkboxClass: 'icheckbox_flat-green',
-           radioClass: 'iradio_flat-green',
-         });
-
-
-          var bounds = null;
-
-          // add layers to map and control
-          $.each(dataSource, function(index, element){
-            if (element.visible) {
-              element.addToMap();
-              if (!bounds) {
-                bounds = element.layer.getBounds();
-              } else {
-                bounds = bounds.extend(element.layer.getBounds());
-              }
-            }
-          });
-
-          map.fitBounds(bounds);
-        };
-
-        /**
-         * CREATE OVERLAYS
-         */
-        function generateOverlays(streetName, sectionName, section) {
-
-          var latLngs = [];
-          var id = section.id;
-          var order = section.order
-          var metrics = section.segxkm != null ? section.segxkm.toFixed(1) : null;
-          var group = section.group;
-          var nObs = section.nObs;
-          var points = section.points;
-          var origin = section.originStreet;
-          var destination = section.destinationStreet;
-
-          // order points by distOnRoute
-          points.sort(function(a, b) {
-            return a.distOnRoute - b.distOnRoute;
-          });
-
-          // populate positions
-          $.each(points, function(i2, point) {
-            latLngs.push([point.latitude, point.longitude]);
-          });
-
-          var line = L.polyline(latLngs, {color: getColor(metrics)});
-
-          var patternsOpts = [
-          // defines a pattern of 10px-wide dashes, repeated every 20px on the line
-          {offset: 10,
-            endOffset: 5,
-            repeat: '5%',
-            symbol: L.Symbol.longArrowHead({
-              rotate: true,
-              pixelSize: 5,
-              polygon: true,
-              pathOptions: {
-                color: getColor(metrics),
-                stroke: false,
-                fillColor: getColor(metrics),
-                fillOpacity: 1.0
-              }
-            })
-          }
-          ]
-          var decorator = L.polylineDecorator(line, {patterns: patternsOpts});
-
-          //********************************************************/
-          // set bubble
-          var text = metrics + " s/km";
-          if (metrics == null) {
-            text = 'Sin Datos';
-          }
-          var message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Tramo: " + order + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
-          decorator.bindPopup(message);
-          line.bindPopup(message);
-
-          //********************************************************/
-          // animation
-          var arrowOffset = 0;
-          patternsOpts[0].repeat = 0;
-          var anim = window.setInterval(function() {
-            patternsOpts[0].offset = arrowOffset + '%';
-            decorator.setPatterns(patternsOpts);
-            if(arrowOffset > 100)
-              arrowOffset = 0;
-            arrowOffset = arrowOffset + 1;
-          }, 50);
-          //********************************************************/
-
-          // create overlay
-          var overlay = L.featureGroup([]);
-          overlay.addLayer(line);
-          overlay.addLayer(decorator);
-
-          categorizeSection(overlay, getColor(metrics), group, streetName, id);
-
-          console.log("Map updated with polyline decorator");
-        }
+        let app = new App(map, getMetric, getColor, getColorPosition);
 
         function downloadData() {
           $.ajax({
@@ -473,37 +494,33 @@
             success: function(status){
 
               if (!status){
-                return;
+                //return;
               }
-
+              
               $.ajax({
                 url: "getTimeMapData",
                 success: function(data){
-                  if (currentHour != data.hour) {
-                    console.log('time to update map data');
-                    // merge streets
-                    var streets = {};
-                    $.each(data.Destination, function(i, origin){
-                      $.each(origin, function(i,v){
-                        streets = $.extend(streets, v);
-                      });
+                  console.log('time to update map data');
+                  // merge streets
+                  let streets = {};
+                  $.each(data.Destination, function(i, origin){
+                    $.each(origin, function(i,v){
+                      streets = $.extend(streets, v);
                     });
-                    currentHour = data.hour
-                    currentDayType = data.dayType
-                    $.each(streets, function(streetName, street) {
-                      $.each(street.sections, function(sectionName, section) {
-                        generateOverlays(streetName, sectionName, section);
-                      });
+                  });
+                  $.each(streets, function(streetName, street) {
+                    $.each(street.sections, function(sectionName, section) {
+                      app.generateOverlays(streetName, sectionName, section);
                     });
-                    updateMap(currentHour, currentDayType);
-                  }
+                  });
+                  app.updateMap(data.hour, data.dayType);
                 }
               });
             }
           });
         }
         downloadData();
-        setInterval(downloadData, 60*1000);
+        setInterval(downloadData, 30*1000);
       });
   </script>
 
