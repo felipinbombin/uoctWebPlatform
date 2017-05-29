@@ -326,9 +326,10 @@
        }).setView(beauchefLocation, 13);
        let blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
        let grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
+	   let stopStyle='https://api.mapbox.com/styles/v1/transapp/cj3a8ksvx000t2sqstwxzbc2f/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og'
        let attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
-       let blackLayer = L.tileLayer(grayStyle, {attribution: attribution});
+       let blackLayer = L.tileLayer(stopStyle, {attribution: attribution});
        blackLayer.addTo(map);
 
        let modalContent =
