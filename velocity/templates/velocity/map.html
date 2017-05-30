@@ -246,22 +246,23 @@
            return orderedList;
          }
 
-         let _generateGroupList = function(divId, attrName, sortFunction, htmlGenerator) {
+         let _generateGroupList = function(divId, attrName, sortFunction, getLabel) {
            let orderedList = _getAttributeUniqueList(attrName, sortFunction);
            $.each(orderedList, function(index, item){
              let attrValue = item.attrValue;
              let frecuency = item.frecuency;
-             let html = $(htmlGenerator(attrValue, frecuency));
+             let label = getLabel(attrValue, frecuency);
 
              let checkbox = null;
              let checkboxId = attrValue.replace(/\.|-| |#/g, '');
              let checkboxExists = $('#'+checkboxId).length ? true:false;
              if (checkboxExists){
                checkbox = $('#'+checkboxId);
-               checkbox.next().html(attrValue + " ( " + frecuency + " tramos)");
+               checkbox.parent().next().html(label);
                checkbox.off('ifChecked');
                checkbox.off('ifUnchecked');
              } else {
+			   let html = $("<div class='checkbox'><label>" + label + "</label></div>");
                checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />");
                html.prepend(checkbox);
                $('#' + divId).append(html);
@@ -294,21 +295,21 @@
            _generateGroupList('listContent', 'name', function(a, b){
              return a.attrValue.localeCompare(b.attrValue);
            }, function(name, frecuency){
-             return "<div class='checkbox'><label> " + name + " (" + frecuency + " tramos)</label></div>";
+             return " " + name + " (" + frecuency + " tramos)";
            });
 
            // groups
            _generateGroupList('groupContent', 'group', function(a, b){
              return a.attrValue.localeCompare(b.attrValue);
            }, function(group, frecuency){
-             return "<div class='checkbox'><label> " + group + " (" + frecuency + " tramos)</label></div>";
+             return " " + group + " (" + frecuency + " tramos)";
            });
 
            // colors
            _generateGroupList('colorContent', 'color', function(a, b){
              return _getColorPosition(a.attrValue) - _getColorPosition(b.attrValue);
            }, function(color, frecuency){
-             return "<div class='checkbox'><label> (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i></label></div>";
+             return " (" + frecuency + " tramos)<i class='filterColor' style='background:" + color + "'></i>";
            });
 
            console.log('checkboxs info updated');
@@ -492,8 +493,9 @@
         function downloadData() {
           $.ajax({
             url: "getDataStatus",
-            success: function(status){
-
+            success: function(response){
+			  let status = response.status;
+              
               if (!status){
                 return;
               }
