@@ -98,7 +98,7 @@
          let _getMetric = getMetricFunc;
          let _getColor = getColorFunc;
          let _getColorPosition = getColorPositionFunc;
-		 let _makeBounds = true;
+         let _makeBounds = true;
 
          let _categorizeSection = function(layer, color, group, name, id) {
            // if id is present in data
@@ -262,7 +262,7 @@
                checkbox.off('ifChecked');
                checkbox.off('ifUnchecked');
              } else {
-			   let html = $("<div class='checkbox'><label>" + label + "</label></div>");
+               let html = $("<div class='checkbox'><label>" + label + "</label></div>");
                checkbox = $("<input id='"+checkboxId+"' type='checkbox' class='flat' checked='checked' />");
                html.prepend(checkbox);
                $('#' + divId).append(html);
@@ -327,7 +327,7 @@
        }).setView(beauchefLocation, 13);
        let blackStyle='https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
        let grayStyle= 'https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og';
-	   let stopStyle='https://api.mapbox.com/styles/v1/transapp/cj3a8ksvx000t2sqstwxzbc2f/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og'
+       let stopStyle='https://api.mapbox.com/styles/v1/transapp/cj3a8ksvx000t2sqstwxzbc2f/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og'
        let attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
        let blackLayer = L.tileLayer(stopStyle, {attribution: attribution});
@@ -399,12 +399,14 @@
          position: 'topright',
          states: [{
            stateName: 'filter',
-           icon: 'fa-filter fa-lg',
+           icon: '<i id="filterButton" class="fa fa-filter fa-lg"></i>',
            onClick: function(btn, map) {
              win.show();
            }
          }]
        }).addTo(map);
+       $('#filterButton').parent().parent().css('margin-bottom', 0);
+       $('#filterButton').parent().parent().css('margin-right', 0);
 
        /**
         * DEFINE HOUR CONTROL
@@ -494,7 +496,7 @@
           $.ajax({
             url: "getDataStatus",
             success: function(response){
-			  let status = response.status;
+              let status = response.status;
               
               if (!status){
                 return;
