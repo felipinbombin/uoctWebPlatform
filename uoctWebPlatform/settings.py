@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 import uoctWebPlatform.keys.database as database
 import uoctWebPlatform.keys.secret_key as secretKey
 
@@ -27,7 +28,7 @@ SECRET_KEY = secretKey.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [u'200.9.100.91']
+ALLOWED_HOSTS = [u'200.9.100.91', '172.17.77.240']
 
 
 # Application definition
@@ -115,5 +116,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/uoct/static/'
+# to detect if the file is running with manage.py runserver
+RUNNING_DEVSERVER = (len(sys.argv) > 1 and sys.argv[1] == 'runserver')
+if RUNNING_DEVSERVER:
+    STATIC_URL = '/static/'
+else:
+    STATIC_URL = '/uoct/static/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
