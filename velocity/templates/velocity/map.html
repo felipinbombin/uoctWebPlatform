@@ -330,8 +330,9 @@
        let stopStyle='https://api.mapbox.com/styles/v1/transapp/cj3a8ksvx000t2sqstwxzbc2f/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHJhbnNhcHAiLCJhIjoiY2lzbjl6MDQzMDRkNzJxbXhyZWZ1aTlocCJ9.-xsBhulirrT0nMom_Ay9Og'
        let attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
                          'Imagery © <a href="http://mapbox.com">Mapbox</a>';
-       let blackLayer = L.tileLayer(stopStyle, {attribution: attribution});
-       blackLayer.addTo(map);
+       let grayBaseLayerWithStops = L.tileLayer(stopStyle, {attribution: attribution});
+       let grayBaseLayer = L.tileLayer(grayStyle, {attribution: attribution});
+       grayBaseLayer.addTo(map);
 
        let modalContent =
       '<div class="col-md-12 col-sm-12 col-xs-12">' +
@@ -429,6 +430,33 @@
          return div;
        };
        dayTypeControl.addTo(map);
+
+       /**
+        * DEFINE SWITCH MAP
+        */
+       L.easyButton({
+         position: 'topright',
+         states: [{
+           stateName: 'map',
+           icon: '<i id="switchMap" class="fa fa-map fa-lg"></i>',
+           onClick: function(btn, map) {
+	         map.removeLayer(grayBaseLayer);
+			 map.addLayer(grayBaseLayerWithStops);
+			 btn.state('mapWithStops');
+           }
+		 },{
+		   stateName: 'mapWithStops',
+           icon: '<i id="switchMap" class="fa fa-map-signs fa-lg"></i>',
+           onClick: function(btn, map) {
+	         map.removeLayer(grayBaseLayerWithStops);
+			 map.addLayer(grayBaseLayer);
+			 btn.state('map');
+           }
+		 }]
+       }).addTo(map);
+       $('#switchMap').parent().parent().css('margin-bottom', 0);
+       $('#switchMap').parent().parent().css('margin-right', 0);
+
 
        // color for line
        let colors = ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F'];
