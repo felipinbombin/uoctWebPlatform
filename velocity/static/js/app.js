@@ -145,7 +145,7 @@ let App = (function(aa){
       position: 'topright',
       states: [{
         stateName: 'map',
-        icon: '<i id="switchMap" class="fa fa-map fa-lg"></i>',
+        icon: '<i id="switchMap" class="fa fa-map-signs fa-lg"></i>',
         onClick: function(btn, map) {
           map.removeLayer(grayBaseLayer);
           map.addLayer(grayBaseLayerWithStops);
@@ -153,7 +153,7 @@ let App = (function(aa){
         }
       },{
         stateName: 'mapWithStops',
-        icon: '<i id="switchMap" class="fa fa-map-signs fa-lg"></i>',
+        icon: '<i id="switchMap" class="fa fa-map fa-lg"></i>',
         onClick: function(btn, map) {
           map.removeLayer(grayBaseLayerWithStops);
           map.addLayer(grayBaseLayer);
