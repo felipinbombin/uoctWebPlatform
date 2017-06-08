@@ -192,8 +192,8 @@ let App = (function(aa){
       _dataSource[id] = new Element(layer, color, group, name);
     }
   
-    // Add legend to map
-    this.addLegend = function(legendControl){
+    // Add control to map
+    this.addControl = function(legendControl){
       legendControl.addTo(_map);
     };
 
