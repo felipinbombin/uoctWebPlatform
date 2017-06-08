@@ -4,9 +4,23 @@ from django.http import JsonResponse
 from django.db import connection
 import datetime as dt
 
-from velocity.models import Tramos15MinUOCT, Status
+from velocity.models import Tramos15MinUOCT74, Tramos15MinUOCT2349, Tramos15MinUOCTReferencia74, Tramos15MinUOCTReferencia2349, Status
 
 # Create your views here.
+
+class RefMapHandler(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request, networkId):
+        template = "velocity/refMap.html"
+        self.context['networkId'] = networkId
+
+        return render(request, template, self.context)
+
 
 class TimeMapHandler(View):
     '''This class manages the map where the street section are shown'''
@@ -15,8 +29,9 @@ class TimeMapHandler(View):
         """the contructor, context are the parameter given to the html template"""
         self.context={}
 
-    def get(self, request):
+    def get(self, request, networkId):
         template = "velocity/map.html"
+        self.context['networkId'] = networkId
 
         return render(request, template, self.context)
 
@@ -27,8 +42,9 @@ class DiffMapHandler(View):
         """the contructor, context are the parameter given to the html template"""
         self.context={}
 
-    def get(self, request):
+    def get(self, request, networkId):
         template = "velocity/mapDiff.html"
+        self.context['networkId'] = networkId
 
         return render(request, template, self.context)
 
@@ -39,8 +55,9 @@ class PercDiffMapHandler(View):
         """the contructor, context are the parameter given to the html template"""
         self.context={}
 
-    def get(self, request):
+    def get(self, request, networkId):
         template = "velocity/mapPercDiff.html"
+        self.context['networkId'] = networkId
 
         return render(request, template, self.context)
 
@@ -49,8 +66,9 @@ class TimeTableMapHandler(View):
     def __init__(self):
         self.context={}
 
-    def get(self, request):
+    def get(self, request, networkId):
         template = 'velocity/table.html'
+        self.context['networkId'] = networkId
 
         return render(request, template, self.context)
 
@@ -64,7 +82,24 @@ class GetMapData(View):
 
     def get(self, request):
         """ streets data """
-        points = Tramos15MinUOCT.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
+
+        networkId = int(request.GET.get('networkId'))
+
+        entity = None
+        if networkId == 74:
+            entity = Tramos15MinUOCT74
+        elif networkId ==  741:
+            entity = Tramos15MinUOCTReferencia74
+        elif networkId == 2349:
+            entity = Tramos15MinUOCT2349
+        elif networkId == 23491:
+            entity = Tramos15MinUOCTReferencia2349
+        
+        points = None
+        if networkId in [74, 2349]:
+            points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
+        elif networkId in [741, 23491]:
+            points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
 
         dest = 'Destination'
         response = {}
@@ -122,8 +157,20 @@ class GetTimeTableData(View):
 
     def get(self, request):
         ''' '''
-        points = Tramos15MinUOCT.objects.all().distinct('eje_id', 'tramo', 'calle_origen', 'calle_destino', 'segundos_por_km_tramo')
 
+        networkId = int(request.GET.get('networkId'))
+
+        if networkId == 74:
+            entity = Tramos15MinUOCT74
+        elif networkId == 741:
+            entity = Tramos15MinUOCTReferencia74
+        elif networkId == 2349:
+            entity = Tramos15MinUOCT2349
+        elif networkId == 23491:
+            entity = Tramos15MinUOCTReferencia2349
+   
+        points = entity.objects.all().distinct('eje_id', 'tramo', 'calle_origen', 'calle_destino', 'segundos_por_km_tramo')
+        
         dataset = []
         for point in points:
             street = {}

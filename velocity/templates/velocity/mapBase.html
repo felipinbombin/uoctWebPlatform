@@ -76,7 +76,7 @@
 
     function downloadData() {
       $.ajax({
-        url: "getDataStatus",
+        url: "{% url 'getDataStatus' %}",
         success: function(response){
           let status = response.status;
              
@@ -85,7 +85,8 @@
           }
               
           $.ajax({
-            url: "getTimeMapData",
+            url: "{% url 'getTimeMapData' %}",
+			data: {networkId: {{ networkId }} },
             success: function(data){
               console.log('time to update map data');
               // merge streets

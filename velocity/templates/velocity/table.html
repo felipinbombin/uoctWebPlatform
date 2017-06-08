@@ -82,46 +82,62 @@ function numberRender(data, type, row) {
   }
   return value;
 }
-function loadTable() {
-  $.get('./getStreetTableData', function(data) {
-    var hour = data.hour;
-    $('#hour').text(hour);
-    var dataset = data.dataset;
-    let hourFormat = data.hour.replace(':00-', '_');
-    hourFormat = hourFormat.replace(new RegExp(':00$'), '');
-    hourFormat = hourFormat.replace(new RegExp(':', 'g'), '.');
-    console.log(hourFormat);
-    let fileName = 'Tiempos_' + (new Date()).yyyymmdd() + '_' + hourFormat;
+function getFileName(hour){
+  let hourFormat = hour.replace(':00-', '_');
+  hourFormat = hourFormat.replace(new RegExp(':00$'), '');
+  hourFormat = hourFormat.replace(new RegExp(':', 'g'), '.');
+  
+  let fileName = 'Tiempos_' + (new Date()).yyyymmdd() + '_' + hourFormat;
 
-    var dt = $('#sdatatable').DataTable({
-      dom: 'frBtip',
-      buttons: [
-        //{extend: 'copy', text: 'Copiar'}, 
-        {extend: 'csv', filename: fileName}, 
-        {extend: 'excel', filename: fileName},
-        //{extend: 'print', text: 'Imprimir'},
-      ],
-      pageLength: 20,
-      data: dataset,
-      language: {
-        url: '//cdn.datatables.net/plug-ins/1.10.13/i18n/Spanish.json'
-      },
-      columns: [
-        { title: 'Eje',               data: 'axis',        searchable: true},
-        { title: 'Tramo',             data: 'section',     searchable: true, className: 'text-center'},
-        { title: 'Inicio',            data: 'origin',      searchable: true},
-        { title: 'Fin',               data: 'destination', searchable: true},
-        { title: 'N° obs',  data: 'nObs',        searchable: true, className: 'text-center'},
-        { title: 'Actual (s/km)',     data: 'metrics',     searchable: true, render: numberRender, className: 'text-center'},
-        { title: 'Referencia (s/km)', data: 'refVel',      searchable: true, render: numberRender, className: 'text-center'},
-        { title: 'Diferencia (s/km)', data: 'diff',        searchable: true, render: numberRender, className: 'text-center'},
-      ],
-      order: [[0, 'asc']],
-    });
+  return fileName;
+}
+function loadTable(update) {
+  $.get("{% url 'getTableData' %}", 
+    {networkId: {{ networkId }} }, 
+    function(data){
+      let hour = data.hour;
+      $('#hour').text(hour);
+	  let fileName = getFileName(hour);
+      let dataset = data.dataset;
+      let dt = $('#sdatatable');
+	  if (update){
+	    dt = dt.DataTable();
+        dt.clear();
+		dt.rows.add(dataset);
+		dt.draw();
+      } else {
+        dt.DataTable({
+          dom: 'frBtip',
+          buttons: [
+            //{extend: 'copy', text: 'Copiar'}, 
+            {extend: 'csv', filename: fileName}, 
+            {extend: 'excel', filename: fileName},
+            //{extend: 'print', text: 'Imprimir'},
+          ],
+          pageLength: 20,
+          data: dataset,
+          language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.13/i18n/Spanish.json'
+          },
+          columns: [
+            { title: 'Eje',               data: 'axis',        searchable: true},
+            { title: 'Tramo',             data: 'section',     searchable: true, className: 'text-center'},
+            { title: 'Inicio',            data: 'origin',      searchable: true},
+            { title: 'Fin',               data: 'destination', searchable: true},
+            { title: 'N° obs',  data: 'nObs',        searchable: true, className: 'text-center'},
+            { title: 'Actual (s/km)',     data: 'metrics',     searchable: true, render: numberRender, className: 'text-center'},
+            { title: 'Referencia (s/km)', data: 'refVel',      searchable: true, render: numberRender, className: 'text-center'},
+            { title: 'Diferencia (s/km)', data: 'diff',        searchable: true, render: numberRender, className: 'text-center'},
+          ],
+          order: [[0, 'asc']],
+        });
+	  }
+      console.log('table updated');
   });
 };
 $(document).ready(function() { 
-  loadTable();
+  loadTable(false);
+  setInterval(function(){loadTable(true);}, 60*1000);
 });
 </script>
 {% endblock %}

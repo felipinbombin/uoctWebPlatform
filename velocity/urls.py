@@ -1,14 +1,15 @@
 from django.conf.urls import url
 from . import views
-from velocity.views import PercDiffMapHandler, DiffMapHandler, TimeMapHandler, GetMapData, TimeTableMapHandler, GetTimeTableData, GetDataStatus
+from velocity.views import PercDiffMapHandler, DiffMapHandler, TimeMapHandler, GetMapData, TimeTableMapHandler, GetTimeTableData, GetDataStatus, RefMapHandler
 
+app_name = 'velocity'
 urlpatterns = [
-	url(r'^timeMap$', TimeMapHandler.as_view(), name='timeMap'),
-	url(r'^diffMap$', DiffMapHandler.as_view(), name='diffMap'),
-	url(r'^diffPercMap$', PercDiffMapHandler.as_view(), name='diffPercMap'),
-	url(r'^getTimeMapData$', GetMapData.as_view()),
-	url(r'^getDiffMapData$', GetMapData.as_view()),
-        url(r'^timeTable$', TimeTableMapHandler.as_view(), name='timeTable'),
-        url(r'^getStreetTableData$', GetTimeTableData.as_view()),
-        url(r'^getDataStatus$', GetDataStatus.as_view()),
+	url(r'^timeMap/(?P<networkId>[0-9]+)$', TimeMapHandler.as_view(), name='timeMap'),
+	url(r'^diffMap/(?P<networkId>[0-9]+)$', DiffMapHandler.as_view(), name='diffMap'),
+	url(r'^diffPercMap/(?P<networkId>[0-9]+)$', PercDiffMapHandler.as_view(), name='diffPercMap'),
+	url(r'^refMap/(?P<networkId>[0-9]+)$', RefMapHandler.as_view(), name='refMap'),
+        url(r'^getTimeMapData$', GetMapData.as_view(), name='getTimeMapData'),
+        url(r'^timeTable/(?P<networkId>[0-9]+)$', TimeTableMapHandler.as_view(), name='timeTable'),
+        url(r'^getStreetTableData$', GetTimeTableData.as_view(), name='getTableData'),
+        url(r'^getDataStatus$', GetDataStatus.as_view(), name='getDataStatus'),
 ]
