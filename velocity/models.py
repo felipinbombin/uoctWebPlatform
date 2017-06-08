@@ -107,7 +107,7 @@ class Tramos15MinUOCTReferencia74(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tramos_15min_uoct_referencia_uoct_red74'
+        db_table = 'tramos_15min_referencia_uoct_red74'
         unique_together = (('tipodia', 'periodo15', 'id'),)
 
 class Tramos15MinUOCTReferencia2349(models.Model):
@@ -144,7 +144,7 @@ class Tramos15MinUOCTReferencia2349(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tramos_15min_uoct_referencia_uoct_red2349'
+        db_table = 'tramos_15min_referencia_uoct_red2349'
         unique_together = (('tipodia', 'periodo15', 'id'),)
 
 
