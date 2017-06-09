@@ -62,7 +62,7 @@ var setContentHeight = function () {
 		contentHeight = bodyHeight < leftColHeight ? leftColHeight : bodyHeight;
 
 	// normalize content
-	contentHeight -= $NAV_MENU.outerHeight() + footerHeight;
+	contentHeight -= 2*$NAV_MENU.outerHeight() + footerHeight;
 	$RIGHT_COL.css('min-height', contentHeight);
 };
 
@@ -5024,9 +5024,10 @@ if (typeof NProgress != 'undefined') {
 	   
 	$(document).ready(function() {
 				
+		init_sidebar();
+        /*
 		init_sparklines();
 		init_flot_chart();
-		init_sidebar();
 		init_wysiwyg();
 		init_InputMask();
 		init_JQVmap();
@@ -5058,7 +5059,7 @@ if (typeof NProgress != 'undefined') {
 		init_CustomNotification();
 		init_autosize();
 		init_autocomplete();
-				
+	    */	
 	});	
 	
 
