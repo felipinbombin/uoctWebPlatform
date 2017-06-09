@@ -1,0 +1,108 @@
+{% extends 'velocity/mapBase.html' %}
+
+{% block mapjs %}
+  // color for line
+  let colors = ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F'];
+  let getColorPosition = function(color) {
+    return $.inArray(color, colors);
+  };
+
+  let getColor = function(d) {
+    if(d == null){
+      return colors[0];
+    }
+    return d <  0   ? colors[0] :
+           d <= 180 ? colors[1] :
+           d <= 240 ? colors[2] :
+           d <= 300 ? colors[3] :
+           d <= 360 ? colors[4] :
+                      colors[5];
+   };
+
+   // DEFINE LEGEND
+   let legend = L.control({position: 'bottomright'});
+   legend.onAdd = function (map) {
+     let div = L.DomUtil.create('div', 'info legend'),
+     grades = [0, 180, 240, 300, 360],
+     labels = [];
+
+     div.innerHTML += '<h4>s/km</h4>';
+
+     // loop through our density intervals and generate a label with a colored square for each interval
+     for (let i = 0; i < grades.length; i++) {
+       let color = '';
+       let legend = '';
+       if (i==0) {
+         color = getColor(grades[i]-1);
+         legend = ' Sin datos ';
+         let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+         div.innerHTML += html;
+       }
+       switch (true) {
+         case (i==grades.length-1):
+           color = getColor(grades[i]+1);
+           legend = ' > ' + grades[i];
+           break;
+         default: // middle
+           color = getColor(grades[i] + 1)
+           legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
+           break;
+       }
+       let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+       div.innerHTML += html;
+     }
+
+     return div;
+   };
+
+   let filterControl = L.control({position: 'topcenter'});
+   filterControl.onAdd = function (map) {
+     let div = L.DomUtil.create('div', 'info legend');
+     div.innerHTML += '<div class="form-inline"><select id="dayType" class="form-control input-sm">{%for dayType in dayTypes %}<option>{{dayType}}</option>{% endfor %}</select>'+
+     '<select id="period" class="form-control input-sm">{%for period in periods %}<option>{{period}}</option>{% endfor %}</select></div>';
+     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+     return div;
+   };
+
+   let getMetric = function(section){
+     return section.segxkm != null ? section.segxkm.toFixed(1) : null;
+   };
+   let app = new App(getMetric, getColor, getColorPosition);
+   app.addControl(legend);
+   app.addControl(filterControl);
+   app.setMapControlVisibility('hourInfo', false);
+   app.setMapControlVisibility('dayTypeInfo', false);
+
+   //add button logic
+   $('.form-control').change(function(){
+     let data = {};
+     data['networkId'] = {{ networkId }};
+     data['dayType'] = $('#dayType option:checked').val();
+     data['period'] = $('#period option:checked').val();
+     $.ajax({
+       url: "{% url 'getRefMapData' %}",
+       data: data,
+       success: function(data){
+         console.log('update map data');
+         // merge streets
+         let streets = {};
+         $.each(data.Destination, function(i, origin){
+           $.each(origin, function(i,v){
+             streets = $.extend(streets, v);
+           });
+         });
+         $.each(streets, function(streetName, street) {
+           $.each(street.sections, function(sectionName, section) {
+             app.generateOverlays(streetName, sectionName, section);
+           });
+         });
+         app.updateMap(data.hour, data.dayType);
+       }
+     });
+   });
+   $('#period').change();
+{% endblock %}
+
+{% block downloaddata %}
+{% endblock %}
+
