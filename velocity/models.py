@@ -25,7 +25,7 @@ class Tramos15MinUOCT74(models.Model):
     segundos_por_km_tramo = models.FloatField(blank=True, null=True)
     nobs = models.IntegerField(blank=True, null=True)
     grupo = models.CharField(max_length=200, blank=True, null=True)
-    periodo15 = models.TimeField(blank=True, null=True)
+    periodo15 = models.CharField(max_length=20, blank=True, null=True)
     tipo_dia = models.CharField(max_length=200, blank=True, null=True)
     diferencia_referencia = models.FloatField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
@@ -61,7 +61,7 @@ class Tramos15MinUOCT2349(models.Model):
     segundos_por_km_tramo = models.FloatField(blank=True, null=True)
     nobs = models.IntegerField(blank=True, null=True)
     grupo = models.CharField(max_length=200, blank=True, null=True)
-    periodo15 = models.TimeField(blank=True, null=True)
+    periodo15 = models.CharField(max_length=20, blank=True, null=True)
     tipo_dia = models.CharField(max_length=200, blank=True, null=True)
     diferencia_referencia = models.FloatField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
@@ -75,7 +75,7 @@ class Tramos15MinUOCT2349(models.Model):
 
 class Tramos15MinUOCTReferencia74(models.Model):
     eje_id = models.CharField(max_length=200, blank=True, null=True)
-    tipodia = models.CharField(max_length=20, blank=True, null=True)
+    tipo_dia = models.CharField(max_length=20, blank=True, null=True)
     secuencia_eje_macro = models.IntegerField(blank=True, null=True)
     tramo = models.CharField(max_length=200)
     eje = models.CharField(max_length=200)
@@ -98,8 +98,8 @@ class Tramos15MinUOCTReferencia74(models.Model):
     segundos_por_km_tramo = models.FloatField(blank=True, null=True)
     nobs = models.IntegerField(blank=True, null=True)
     grupo = models.CharField(max_length=200, blank=True, null=True)
-    periodo15 = models.TimeField(blank=True, null=True)
-    tipo_dia = models.CharField(max_length=200, blank=True, null=True)
+    periodo15 = models.CharField(max_length=20, blank=True, null=True)
+    tipodia = models.CharField(max_length=200, blank=True, null=True)
     diferencia_referencia = models.FloatField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
     coeficiente_referencia = models.FloatField(blank=True, null=True)
@@ -108,11 +108,11 @@ class Tramos15MinUOCTReferencia74(models.Model):
     class Meta:
         managed = False
         db_table = 'tramos_15min_referencia_uoct_red74'
-        unique_together = (('tipodia', 'periodo15', 'id'),)
+        unique_together = (('tipo_dia', 'periodo15', 'id'),)
 
 class Tramos15MinUOCTReferencia2349(models.Model):
     eje_id = models.CharField(max_length=200, blank=True, null=True)
-    tipodia = models.CharField(max_length=20, blank=True, null=True)
+    tipo_dia = models.CharField(max_length=20, blank=True, null=True)
     secuencia_eje_macro = models.IntegerField(blank=True, null=True)
     tramo = models.CharField(max_length=200)
     eje = models.CharField(max_length=200)
@@ -135,8 +135,8 @@ class Tramos15MinUOCTReferencia2349(models.Model):
     segundos_por_km_tramo = models.FloatField(blank=True, null=True)
     nobs = models.IntegerField(blank=True, null=True)
     grupo = models.CharField(max_length=200, blank=True, null=True)
-    periodo15 = models.TimeField(blank=True, null=True)
-    tipo_dia = models.CharField(max_length=200, blank=True, null=True)
+    periodo15 = models.CharField(max_length=20, blank=True, null=True)
+    tipodia = models.CharField(max_length=200, blank=True, null=True)
     diferencia_referencia = models.FloatField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
     coeficiente_referencia = models.FloatField(blank=True, null=True)
@@ -145,7 +145,7 @@ class Tramos15MinUOCTReferencia2349(models.Model):
     class Meta:
         managed = False
         db_table = 'tramos_15min_referencia_uoct_red2349'
-        unique_together = (('tipodia', 'periodo15', 'id'),)
+        unique_together = (('tipo_dia', 'periodo15', 'id'),)
 
 
 class Status(models.Model):

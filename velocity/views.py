@@ -7,6 +7,43 @@ import datetime as dt
 from velocity.models import Tramos15MinUOCT74, Tramos15MinUOCT2349, Tramos15MinUOCTReferencia74, Tramos15MinUOCTReferencia2349, Status
 
 # Create your views here.
+def transformData(points):
+    dest = 'Destination'
+    response = {}
+    response[dest] = {}
+    for point in points:
+        if not point.destino in response[dest]:
+            response[dest][point.destino] = {}
+        if not point.zona in response[dest][point.destino]:
+            response[dest][point.destino][point.zona] = {}
+        if not point.eje in response[dest][point.destino][point.zona]:
+            street = {}
+            street['origin'] = point.hito_origen
+            street['destination'] = point.hito_destino
+            street['sections'] = {}
+            response[dest][point.destino][point.zona][point.eje] = street
+            
+        if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
+            section = {}
+            section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
+            section['order'] = point.secuencia_eje_macro
+            section['originStreet'] = point.calle_origen
+            section['destinationStreet'] = point.calle_destino
+            section['nObs'] = point.nobs
+            section['group'] = point.grupo
+            section['segxkm'] = point.segundos_por_km_tramo
+            section['diff'] = point.diferencia_referencia
+            section['percDiff'] = point.coeficiente_referencia
+            section['points'] = []
+            response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
+
+        response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo]['points'].append({
+            'distOnRoute': point.dist_en_ruta, 
+            'latitude': point.latitud, 
+            'longitude': point.longitud})
+
+    return response
+
 
 class RefMapHandler(View):
     '''This class manages the map where the street section are shown'''
@@ -17,7 +54,17 @@ class RefMapHandler(View):
 
     def get(self, request, networkId):
         template = "velocity/refMap.html"
+        networkId = int(networkId)
         self.context['networkId'] = networkId
+
+        entity = None
+        if networkId ==  741:
+            entity = Tramos15MinUOCTReferencia74
+        elif networkId == 23491:
+            entity = Tramos15MinUOCTReferencia2349
+ 
+        self.context['dayTypes'] = entity.objects.values_list('tipodia', flat=True).distinct().order_by('tipodia')
+        self.context['periods'] = entity.objects.values_list('periodo15', flat=True).distinct().order_by('periodo15')
 
         return render(request, template, self.context)
 
@@ -72,6 +119,32 @@ class TimeTableMapHandler(View):
 
         return render(request, template, self.context)
 
+class GetRefMapData(View):
+    '''This class requests to the database the street secction with travel time '''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request):
+        """ streets data """
+
+        networkId = int(request.GET.get('networkId'))
+        dayType = request.GET.get('dayType')
+        period = request.GET.get('period')
+
+        entity = None
+        if networkId ==  741:
+            entity = Tramos15MinUOCTReferencia74
+        elif networkId == 23491:
+            entity = Tramos15MinUOCTReferencia2349
+ 
+        points = entity.objects.filter(tipo_dia=dayType, periodo15=period).order_by('eje', 'tramo', 'dist_en_ruta')
+
+        response = transformData(points)
+
+        return JsonResponse(response, safe=False)
+
 
 class GetMapData(View):
     '''This class requests to the database the street secction with travel time '''
@@ -88,60 +161,20 @@ class GetMapData(View):
         entity = None
         if networkId == 74:
             entity = Tramos15MinUOCT74
-        elif networkId ==  741:
-            entity = Tramos15MinUOCTReferencia74
         elif networkId == 2349:
             entity = Tramos15MinUOCT2349
-        elif networkId == 23491:
-            entity = Tramos15MinUOCTReferencia2349
         
-        points = None
-        if networkId in [74, 2349]:
-            points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
-        elif networkId in [741, 23491]:
-            points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
+        points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
 
-        dest = 'Destination'
-        response = {}
-        response[dest] = {}
-        for point in points:
-            if not point.destino in response[dest]:
-                response[dest][point.destino] = {}
-            if not point.zona in response[dest][point.destino]:
-                response[dest][point.destino][point.zona] = {}
-            if not point.eje in response[dest][point.destino][point.zona]:
-                street = {}
-                street['origin'] = point.hito_origen
-                street['destination'] = point.hito_destino
-                street['sections'] = {}
-                response[dest][point.destino][point.zona][point.eje] = street
-             
-            if not point.tramo in response[dest][point.destino][point.zona][point.eje]['sections']:
-                section = {}
-                section['id'] = "{0}-{1}".format(point.eje_id.encode('utf-8'), point.secuencia_eje_macro)
-                section['order'] = point.secuencia_eje_macro
-                section['originStreet'] = point.calle_origen
-                section['destinationStreet'] = point.calle_destino
-                section['nObs'] = point.nobs
-                section['group'] = point.grupo
-                section['segxkm'] = point.segundos_por_km_tramo
-                section['diff'] = point.diferencia_referencia
-                section['percDiff'] = point.coeficiente_referencia
-                section['points'] = []
-                response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
-
-            response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo]['points'].append({
-                'distOnRoute': point.dist_en_ruta, 
-                'latitude': point.latitud, 
-                'longitude': point.longitud})
+        response = transformData(points)
 
         hour = None
         dayType = None
-        if point:
+        if len(points) > 0:
             delta = dt.timedelta(minutes=15)
-            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
-            hour = "{}-{}".format(point.periodo15, upperTimeLimit)
-            dayType = point.tipo_dia
+            upperTimeLimit = (dt.datetime.combine(dt.date.today(), points[0].periodo15) + delta).time()
+            hour = "{}-{}".format(points[0].periodo15, upperTimeLimit)
+            dayType = points[0].tipo_dia
 
         response['hour'] = hour
         response['dayType'] = dayType

@@ -110,18 +110,7 @@ let App = (function(aa){
         $("input[type=checkbox]").iCheck('uncheck');
       }
     });
-  
-    L.easyButton({
-      position: 'topright',
-      states: [{
-        stateName: 'filter',
-        icon: '<i id="filterButton" class="fa fa-filter fa-lg"></i>',
-        onClick: function(btn, map) {
-          win.show();
-        }
-      }]
-    }).addTo(map);
-  
+
     // DEFINE HOUR CONTROL
     let hourControl = L.control({position: 'topleft'});
     hourControl.onAdd = function (map) {
@@ -140,8 +129,19 @@ let App = (function(aa){
     }; 
     dayTypeControl.addTo(map);
  
+    let filterControl = L.easyButton({
+      position: 'topright',
+      states: [{
+        stateName: 'filter',
+        icon: '<i id="filterButton" class="fa fa-filter fa-lg"></i>',
+        onClick: function(btn, map) {
+          win.show();
+        }
+      }]
+    }).addTo(map);
+  
     // DEFINE SWITCH MAP
-    L.easyButton({
+    let switchMapControl = L.easyButton({
       position: 'topright',
       states: [{
         stateName: 'map',
@@ -167,17 +167,35 @@ let App = (function(aa){
     });
     map.invalidateSize();
 
-    return map;
+    let wrapper = {
+      map: map,
+      controls: {
+        'switchMap': switchMapControl,
+        'filter': filterControl, 
+        'hourInfo': hourControl, 
+        'dayTypeInfo': dayTypeControl
+      }
+    };
+    return wrapper;
   };
   
   function App(getMetricFunc, getColorFunc, getColorPositionFunc){
-    let _map = getMap();
+    let _wrapper = getMap();
+    let _map = _wrapper.map;
+    let _mapControls = _wrapper.controls;
     let _dataSource = {};
     let _getMetric = getMetricFunc;
     let _getColor = getColorFunc;
     let _getColorPosition = getColorPositionFunc;
     let _makeBounds = true;
-  
+
+    this.setMapControlVisibility = function(controlName, val){
+      let control = _mapControls[controlName];
+      _map.removeControl(control);
+        if (val){
+          _map.addControl(control);
+        }
+    }
     let _categorizeSection = function(layer, color, group, name, id) {
       // if id is present in data
       if(_dataSource.hasOwnProperty(id)){

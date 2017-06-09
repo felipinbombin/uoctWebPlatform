@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from . import views
-from velocity.views import PercDiffMapHandler, DiffMapHandler, TimeMapHandler, GetMapData, TimeTableMapHandler, GetTimeTableData, GetDataStatus, RefMapHandler
+from velocity.views import PercDiffMapHandler, DiffMapHandler, TimeMapHandler, GetMapData, TimeTableMapHandler, GetTimeTableData, GetDataStatus, RefMapHandler, GetRefMapData
 
 app_name = 'velocity'
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
         url(r'^timeTable/(?P<networkId>[0-9]+)$', TimeTableMapHandler.as_view(), name='timeTable'),
         url(r'^getStreetTableData$', GetTimeTableData.as_view(), name='getTableData'),
         url(r'^getDataStatus$', GetDataStatus.as_view(), name='getDataStatus'),
+        url(r'^getRefMapData$', GetRefMapData.as_view(), name='getRefMapData'),
 ]
