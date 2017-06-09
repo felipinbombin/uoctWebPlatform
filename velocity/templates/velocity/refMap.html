@@ -80,7 +80,7 @@
      data['dayType'] = $('#dayType option:checked').val();
      data['period'] = $('#period option:checked').val();
      $.ajax({
-       url: "{% url 'getRefMapData' %}",
+       url: "{% url 'velocity:getRefMapData' %}",
        data: data,
        success: function(data){
          console.log('update map data');

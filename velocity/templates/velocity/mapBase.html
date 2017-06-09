@@ -79,7 +79,7 @@
     {% block downloaddata %}
     function downloadData() {
       $.ajax({
-        url: "{% url 'getDataStatus' %}",
+        url: "{% url 'velocity:getDataStatus' %}",
         success: function(response){
           let status = response.status;
              
@@ -88,7 +88,7 @@
           }
               
           $.ajax({
-            url: "{% url 'getTimeMapData' %}",
+            url: "{% url 'velocity:getTimeMapData' %}",
 			data: {networkId: {{ networkId }} },
             success: function(data){
               console.log('time to update map data');

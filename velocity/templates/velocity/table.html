@@ -92,7 +92,7 @@ function getFileName(hour){
   return fileName;
 }
 function loadTable(update) {
-  $.get("{% url 'getTableData' %}", 
+  $.get("{% url 'velocity:getTableData' %}", 
     {networkId: {{ networkId }} }, 
     function(data){
       let hour = data.hour;

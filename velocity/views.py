@@ -238,7 +238,7 @@ class GetDataStatus(View):
 
     def get(self, request):
         ''' '''
-        obj = Status.objects.get(id='uoct1')
+        obj = Status.objects.get(id='uoct_red74')
 
         response = {}
         response['status'] = obj.status
