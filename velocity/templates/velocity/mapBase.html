@@ -101,10 +101,10 @@
               });
               $.each(streets, function(streetName, street) {
                 $.each(street.sections, function(sectionName, section) {
-                  //app.generateOverlays(streetName, sectionName, section);
+                  app.generateOverlays(streetName, sectionName, section);
                 });
               });
-              //app.updateMap(data.hour, data.dayType);
+              app.updateMap(data.hour, data.dayType);
             }
           });
         }
