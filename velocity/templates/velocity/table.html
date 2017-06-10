@@ -87,7 +87,7 @@ function getFileName(hour){
   hourFormat = hourFormat.replace(new RegExp(':00$'), '');
   hourFormat = hourFormat.replace(new RegExp(':', 'g'), '.');
   
-  let fileName = 'Tiempos_' + (new Date()).yyyymmdd() + '_' + hourFormat;
+  let fileName = 'Tiempos_red{{ networkId }}_' + (new Date()).yyyymmdd() + '_' + hourFormat;
 
   return fileName;
 }
