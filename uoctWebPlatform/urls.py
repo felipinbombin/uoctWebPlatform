@@ -20,5 +20,5 @@ from django.views.generic.base import RedirectView
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url='velocity/timeMap/74', permanent=True), name="index"),
     #url(r'^admin/', admin.site.urls),
-    url(r'^velocity/', include('velocity.urls')),
+    url(r'^velocity/', include('velocity.urls', namespace='velocity')),
 ]
