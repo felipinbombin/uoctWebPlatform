@@ -179,7 +179,7 @@ let App = (function(aa){
     return wrapper;
   };
   
-  function App(getMetricFunc, getColorFunc, getColorPositionFunc){
+  function App(getMetricFunc, getColorFunc, getColorPositionFunc, getBubbleInfo){
     let _wrapper = getMap();
     let _map = _wrapper.map;
     let _mapControls = _wrapper.controls;
@@ -187,6 +187,7 @@ let App = (function(aa){
     let _getMetric = getMetricFunc;
     let _getColor = getColorFunc;
     let _getColorPosition = getColorPositionFunc;
+    let _getBubbleInfo = getBubbleInfo;
     let _makeBounds = true;
 
     this.setMapControlVisibility = function(controlName, val){
@@ -222,13 +223,9 @@ let App = (function(aa){
   
       let latLngs = [];
       let id = section.id;
-      let order = section.order
       let metrics = _getMetric(section);
       let group = section.group;
-      let nObs = section.nObs;
       let points = section.points;
-      let origin = section.originStreet;
-      let destination = section.destinationStreet;
   
       // order points by distOnRoute
       points.sort(function(a, b) {
@@ -268,7 +265,7 @@ let App = (function(aa){
       if (metrics == null) {
         text = 'Sin Datos';
       }
-      let message = "<h3>" + text + "</h3><h6>Eje: " + streetName + "</h6><h6>Tramo: " + order + "</h6><h6>Inicio: " + origin + "</h6><h6>Fin: " + destination + "</h6><h6>Grupo: " + group + "</h6><h6>N° obs: " + nObs + "</h6>";
+      let message = _getBubbleInfo(metrics, streetName, section);
       decorator.bindPopup(message);
       line.bindPopup(message);
   

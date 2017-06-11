@@ -26,7 +26,7 @@
      grades = [0.70, 0.85, 1.00, 1.15, 1.30],
      labels = [];
 
-     div.innerHTML += '<h4>%</h4>';
+     div.innerHTML += '<h4>actual/diferencia</h4>';
 	 var htmlGray = '<i style="background:'+colors[0]+'"></i> Sin Datos <br>';
 	 div.innerHTML += htmlGray;
 
@@ -58,8 +58,31 @@
    };
 
    let getMetric = function(section){
-     return section.percDiff != null ? section.percDiff.toFixed(1) : null;
+     return section.percDiff != null ? section.percDiff.toFixed(2) : null;
    };
-   let app = new App(getMetric, getColor, getColorPosition);
+
+   // html to display in popup
+   let getBubbleInfo = function(metric, streetName, section){
+     let text = metric + "";
+     if (metrics == null) {
+       text = 'Sin Datos';
+     }
+     let order = section.order;
+     let origin = section.originStreet;
+     let destination = section.destinationStreet;
+     let group = section.group;
+     let nObs = section.nObs;
+
+     let message = "<h3>" + text + "</h3>" + 
+                   "<h6>Eje: " + streetName + "</h6>" + 
+                   "<h6>Tramo: " + order + "</h6>" + 
+                   "<h6>Inicio: " + origin + "</h6>" + 
+                   "<h6>Fin: " + destination + "</h6>" + 
+                   "<h6>Grupo: " + group + "</h6>" + 
+                   "<h6>N° obs: " + nObs + "</h6>";
+     return message;
+   };
+
+   let app = new App(getMetric, getColor, getColorPosition, getBubbleInfo);
    app.addControl(legend);
 {% endblock %}
