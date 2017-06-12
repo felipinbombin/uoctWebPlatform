@@ -207,7 +207,7 @@ class GetTimeTableData(View):
         dataset = []
         for point in points:
             street = {}
-            street['axis'] = point.eje_id
+            street['corridorId'] = point.eje_id
             street['section'] = point.secuencia_eje_macro
             street['origin'] = point.calle_origen
             street['destination'] = point.calle_destino
