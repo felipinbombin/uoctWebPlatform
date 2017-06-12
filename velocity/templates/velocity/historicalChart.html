@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tabla{% endblock %}
+
+{% block css %}
+{% with "components/gentelella/vendors/" as gentelella_static %}
+<!-- Datatables -->
+<link href="{% static gentelella_static|add:"datatables.net-bs/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+<link href="{% static gentelella_static|add:"datatables.net-buttons-bs/css/buttons.bootstrap.min.css" %}" rel="stylesheet">
+<link href="{% static gentelella_static|add:"datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css" %}" rel="stylesheet">
+<link href="{% static gentelella_static|add:"datatables.net-responsive-bs/css/responsive.bootstrap.min.css" %}" rel="stylesheet">
+<link href="{% static gentelella_static|add:"datatables.net-scroller-bs/css/scroller.bootstrap.min.css" %}" rel="stylesheet"> 
+<link href="{% static gentelella_static|add:"datatables.net-scroller-bs/css/scroller.bootstrap.min.css" %}" rel="stylesheet">
+{% endwith %}
+<style>
+  #datatable tbody tr {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h2>Filtros <small></small></h2>
+          <ul class="nav navbar-right panel_toolbox">
+            <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+          </ul>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+        <div class="row">
+
+          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+            <label class="control-label" for="filterCorridor">Eje :</label>
+            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+            <select class="form-control" id='filterCorridor'>
+              <option></option>
+              {% for idcorridor in idCorridors %}
+              <option>{{ idcorridor }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+            <label class="control-label" for="filterDayType">Tipo de Dia :</label>
+            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+            <select class="form-control" id='filterDayType'>
+              <option></option>
+              {% for daytype in daytypes %}
+              <option>{{ daytype }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+            <label class="control-label" for="filterPeriod">Periodo :</label>
+            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+            <select class="form-control" id='filterPeriod'>
+              <option></option>
+              {% for period in periods %}
+              <option>{{ period }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+       
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group">
+            <div class="ln_solid"></div>
+            <button type="submit" id="btnUpdateChart" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+  <div class="col-md-9 col-sm-9 col-xs-12">
+    <div class="x_panel">
+      <div class="x_title">
+        <h2>Tiempos por eje</h2>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+        <div id="main" style="width: 600px;height:400px;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3 col-xs-12">
+   <div class="x_panel">
+      <div class="x_title">
+        <h2>Información de expedición</h2>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+        <div class="tile-stats">
+          <div class="icon"><i class="fa fa-bus"></i></div>
+          <div class="count" id="route"></div>
+          <h3 id="licensePlate"></h3>
+        </div>
+        <div class="tile-stats">
+          <p>Capacidad: <strong id="capacity"></strong></p>
+          <p>Hora de inicio: <strong id="timeTripInit"></strong></p>
+          <p>Hora de fin: <strong id="timeTripEnd"></strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+{% endblock %}
+
+{% block js %}
+{% with "components/gentelella/vendors/" as gentelella_static %}
+<script src="{% static gentelella_static|add:"echarts/dist/echarts.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-buttons/js/dataTables.buttons.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-buttons-bs/js/buttons.bootstrap.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-buttons/js/buttons.flash.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-buttons/js/buttons.html5.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-buttons/js/buttons.print.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-fixedheader/js/dataTables.fixedHeader.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-responsive/js/dataTables.responsive.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-responsive-bs/js/responsive.bootstrap.js" %}"></script>
+<script src="{% static gentelella_static|add:"datatables.net-scroller/js/dataTables.scroller.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"jszip/dist/jszip.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"pdfmake/build/pdfmake.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"pdfmake/build/vfs_fonts.js" %}"></script>
+{% endwith %}
+
+<script >
+    // based on prepared DOM, initialize echarts instance
+    var myChart = echarts.init(document.getElementById('main'));
+
+    // specify chart configuration item and data
+    var option = {
+        title: {
+            text: 'ECharts entry example'
+        },
+        tooltip: {},
+        legend: {
+            data:['Sales']
+        },
+        xAxis: {
+            data: ["shirt","cardign","chiffon shirt","pants","heels","socks"]
+        },
+        yAxis: {},
+        series: [{
+            name: 'Sales',
+            type: 'line',
+            data: [5, 20, 36, 10, 10, 20]
+        }]
+    };
+
+    // use configuration item and data specified to show chart
+    myChart.setOption(option);
+</script>
+
+{% endblock %}

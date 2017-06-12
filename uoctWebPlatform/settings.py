@@ -28,7 +28,7 @@ SECRET_KEY = secretKey.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [u'200.9.100.91', '172.17.77.240']
+ALLOWED_HOSTS = [u'200.9.100.91', '172.17.77.240', '127.0.0.1']
 
 
 # Application definition
