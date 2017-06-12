@@ -119,6 +119,41 @@ class TimeTableMapHandler(View):
 
         return render(request, template, self.context)
 
+class HistoricalChartHandler(View):
+    '''  '''
+    def __init__(self):
+        self.context={}
+        self.context['daytypes']=['LABORAL','SABADO','DOMINGO']
+        self.context['periods']=self.get30MinutesPeriod()
+        self.context['idCorridors'] = self.getIdCorridors()
+
+    def get30MinutesPeriod(self):
+        periods= []
+        minutes = ['00:00','30:00'] 
+        for hour in xrange(23):
+            for minute in minutes:
+                if hour < 10:
+                    periods.append("0" + str(hour) + ":" + minute)
+                else:
+                    periods.append(str(hour) + ":" + minute)
+        return periods
+
+    def getIdCorridors(self):
+        corridors = Tramos15MinUOCT74.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
+        idcorridors = []
+        for corridor in corridors:
+            idcorridors.append(corridor.eje_id)
+        idcorridors = sorted(set(idcorridors))
+
+        return idcorridors
+
+
+    def get(self, request, networkId):
+        self.context['networkId'] = networkId
+        template = 'velocity/historicalChart.html'
+
+        return render(request, template, self.context)
+
 class GetRefMapData(View):
     '''This class requests to the database the street secction with travel time '''
 
