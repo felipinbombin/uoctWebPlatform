@@ -261,10 +261,6 @@ let App = (function(aa){
    
       //********************************************************/
       // set bubble
-      let text = metrics + " s/km";
-      if (metrics == null) {
-        text = 'Sin Datos';
-      }
       let message = _getBubbleInfo(metrics, streetName, section);
       decorator.bindPopup(message);
       line.bindPopup(message);

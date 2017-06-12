@@ -26,7 +26,7 @@
      grades = [0.70, 0.85, 1.00, 1.15, 1.30],
      labels = [];
 
-     div.innerHTML += '<h4>actual/diferencia</h4>';
+     div.innerHTML += '<h4>actual/referencia</h4>';
 	 var htmlGray = '<i style="background:'+colors[0]+'"></i> Sin Datos <br>';
 	 div.innerHTML += htmlGray;
 
@@ -64,7 +64,7 @@
    // html to display in popup
    let getBubbleInfo = function(metric, streetName, section){
      let text = metric + "";
-     if (metrics == null) {
+     if (metric == null) {
        text = 'Sin Datos';
      }
      let order = section.order;
