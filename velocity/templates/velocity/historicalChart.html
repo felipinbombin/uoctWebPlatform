@@ -17,6 +17,7 @@
   #datatable tbody tr {
     cursor: pointer;
   }
+}
 </style>
 {% endblock %}
 
@@ -34,88 +35,72 @@
         <div class="x_content">
         <div class="row">
 
-          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-            <label class="control-label" for="filterCorridor">Eje :</label>
-            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
-            <select class="form-control" id='filterCorridor'>
-              <option></option>
-              {% for idcorridor in idCorridors %}
-              <option>{{ idcorridor }}</option>
-              {% endfor %}
-            </select>
-          </div>
+            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                <label class="control-label" for="filterCorridor">Eje :</label>
+                <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+                <select class="form-control" id='filterCorridor'>
+                <option></option>
+                {% for idcorridor in idCorridors %}
+                <option>{{ idcorridor }}</option>
+                {% endfor %}
+                </select>
+            </div>
           
-          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-            <label class="control-label" for="filterDayType">Tipo de Dia :</label>
-            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
-            <select class="form-control" id='filterDayType'>
-              <option></option>
-              {% for daytype in daytypes %}
-              <option>{{ daytype }}</option>
-              {% endfor %}
-            </select>
-          </div>
+            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                <label class="control-label" for="filterDayType">Tipo de Dia :</label>
+                <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+                <select class="form-control" id='filterDayType'>
+                <option></option>
+                {% for daytype in daytypes %}
+                <option>{{ daytype }}</option>
+                {% endfor %}
+                </select>
+            </div>
           
-          <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-            <label class="control-label" for="filterPeriod">Periodo :</label>
-            <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
-            <select class="form-control" id='filterPeriod'>
-              <option></option>
-              {% for period in periods %}
-              <option>{{ period }}</option>
-              {% endfor %}
-            </select>
-          </div>
+            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                <label class="control-label" for="filterPeriod">Periodo :</label>
+                <!--<input type="text" id="filterPeriod" placeholder="Servicio sentido" class="form-control">-->
+                <select class="form-control" id='filterPeriod'>
+                <option></option>
+                {% for period in periods %}
+                <option>{{ period }}</option>
+                {% endfor %}
+                </select>
+            </div>
         </div>
        
-          <div class="col-md-12 col-sm-12 col-xs-12 form-group">
-            <div class="ln_solid"></div>
-            <button type="submit" id="btnUpdateChart" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
-          </div>
+            <div class="col-md-12 col-sm-12 col-xs-12 form-group">
+                <div class="ln_solid"></div>
+                <button type="submit" id="btnUpdateChart" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
+            </div>
         </div>
       </div>
     </div>
   </div>
   
   <div class="row">
-  <div class="col-md-9 col-sm-9 col-xs-12">
+  <div class="col-md-12 col-sm-12 col-xs-12">
     <div class="x_panel">
       <div class="x_title">
-        <h2>Tiempos por eje</h2>
+        <h2>Velocidades historicas por eje</h2>
+          <ul class="nav navbar-right panel_toolbox">
+            <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+          </ul>
         <div class="clearfix"></div>
       </div>
       <div class="x_content">
-        <div id="main" style="width: 600px;height:400px;"></div>
+        <div id="main" style="width: 1200px;height:600px;"></div>
       </div>
     </div>
   </div>
   
-  <div class="col-md-3 col-xs-12">
-   <div class="x_panel">
-      <div class="x_title">
-        <h2>Información de expedición</h2>
-        <div class="clearfix"></div>
-      </div>
-      <div class="x_content">
-        <div class="tile-stats">
-          <div class="icon"><i class="fa fa-bus"></i></div>
-          <div class="count" id="route"></div>
-          <h3 id="licensePlate"></h3>
-        </div>
-        <div class="tile-stats">
-          <p>Capacidad: <strong id="capacity"></strong></p>
-          <p>Hora de inicio: <strong id="timeTripInit"></strong></p>
-          <p>Hora de fin: <strong id="timeTripEnd"></strong></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
+
 {% endblock %}
 
 {% block js %}
 {% with "components/gentelella/vendors/" as gentelella_static %}
 <script src="{% static gentelella_static|add:"echarts/dist/echarts.min.js" %}"></script>
+<script src="{% static gentelella_static|add:"moment/min/moment-with-locales.min.js" %}"></script>
 <script src="{% static gentelella_static|add:"datatables.net/js/jquery.dataTables.min.js" %}"></script>
 <script src="{% static gentelella_static|add:"datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
 <script src="{% static gentelella_static|add:"datatables.net-buttons/js/dataTables.buttons.min.js" %}"></script>
@@ -136,28 +121,104 @@
     // based on prepared DOM, initialize echarts instance
     var myChart = echarts.init(document.getElementById('main'));
 
-    // specify chart configuration item and data
-    var option = {
-        title: {
-            text: 'ECharts entry example'
-        },
-        tooltip: {},
-        legend: {
-            data:['Sales']
-        },
-        xAxis: {
-            data: ["shirt","cardign","chiffon shirt","pants","heels","socks"]
-        },
-        yAxis: {},
-        series: [{
-            name: 'Sales',
-            type: 'line',
-            data: [5, 20, 36, 10, 10, 20]
-        }]
-    };
+    /**********BUILD THE CHART ******************/
+    function processData(dataSource){
+      
+        var seriess = []
+        var legends = []
+        var xData = []
+        var sections = dataSource['section'];
 
-    // use configuration item and data specified to show chart
-    myChart.setOption(option);
+        var unaVez = true;
+        for (section in sections)
+        {
+            var serieTmp = {}
+            serieTmp['name'] = section;
+            serieTmp['type'] = 'line';
+            serieTmp['data'] = [];
+            
+            var legend = {}
+            legend['name'] = section;
+            for(date in sections[section]['dates']){
+                 serieTmp['data'].push(sections[section]['dates'][date]['speed']);
+                if(unaVez){
+                    xData.push(sections[section]['dates'][date]['date']);
+                }
+            }
+            unaVez=false;
+            seriess.push(serieTmp);
+            legends.push(legend);
+        }
+
+        // specify chart configuration item and data
+        var option = {
+            tooltip: {
+                show : true,
+                position: 'top'
+            },
+            grid : {
+                left : '10%',
+                right : '10%'
+            },
+            legend: { 
+                data: legends, 
+            },
+            xAxis: {  
+                data: xData,
+                axisLabel: {
+                    rotate: 90,
+                    interval: 1
+                }
+            },
+            yAxis: {
+                min : 0,
+                max : 1000
+            },
+            toolbox: {
+                show : true,
+                feature : {
+                    mark : {show: false},
+                    restore : {show: false, title: "restaurar"},
+                    saveAsImage : {show: true, title: "Guardar imagen"}
+                }
+            },
+            series: seriess
+        };
+        
+        // use configuration item and data specified to show chart
+        myChart.setOption(option);
+    
+    };
+    
+
+    /**********LOAD JSON WITH HISTORICAL DATA******************/
+    (function (){
+      // set locale
+      moment.locale('es');
+      $('#btnUpdateChart').click(function(){
+      
+        var corridor = $('#filterCorridor').val();
+        var dtype = $('#filterDayType option:checked').val();
+        var periodo = $('#filterPeriod option:checked').val();
+        console.log("eje : " + corridor);
+        console.log("tipodia : " + dtype);
+        console.log("periodo : " + periodo);
+        let data = {
+          idCorridorData: corridor,
+          dayTypeData: dtype,
+          periodData: periodo,
+        };
+
+        let loading = " <i class='fa fa-cog fa-spin fa-2x fa-fw'>";
+        let button = $(this).append(loading);
+        $.getJSON("{% url 'velocity:getHistoricalData' %}", data, processData).always(function(){
+            button.html('Actualizar datos')
+        });
+      });
+    })()
+    
+    
+
 </script>
 
 {% endblock %}

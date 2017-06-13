@@ -3,8 +3,9 @@ from django.views.generic import View
 from django.http import JsonResponse
 from django.db import connection
 import datetime as dt
+import collections
 
-from velocity.models import Tramos15MinUOCT74, Tramos15MinUOCT2349, Tramos15MinUOCTReferencia74, Tramos15MinUOCTReferencia2349, Status
+from velocity.models import Tramos15MinUOCT74, Tramos15MinUOCT2349, Tramos15MinUOCTReferencia74, Tramos15MinUOCTReferencia2349, Status, Tramos15MinUOCTHistorico74
 
 # Create your views here.
 def transformData(points):
@@ -154,6 +155,50 @@ class HistoricalChartHandler(View):
 
         return render(request, template, self.context)
 
+class GetHistoricalData(View):
+    '''This class requests to the database the historical data of all segment '''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request):
+        """ streets data """
+
+        idcorridor = request.GET.get('idCorridorData')
+        dayType = request.GET.get('dayTypeData')
+        period = request.GET.get('periodData')
+        # idcorridor = 'Irarrazaval-OP'
+        # dayType = 'LABORAL'
+        # period = '08:00:00'
+        # print str(idcorridor) + "|" + str(dayType) + "|" + str(period)
+        #points = Tramos15MinUOCTHistorico74.objects.filter(tipo_dia=dayType, periodo15=period,eje_id=idcorridor ).order_by('fecha')
+        points = Tramos15MinUOCTHistorico74.objects.filter(tipo_dia=dayType, periodo15=period,eje_id=idcorridor ).order_by('fecha','id_en_eje')
+
+
+        # response = {}
+        # response['fechas'] = []
+        # for point in points:
+        #    response['fechas'].append(str(point.fecha))
+
+        response = {}
+        response['section'] = {}
+        point_ant = -1
+        for point in points:            
+            if not point.id_en_eje in response['section']:
+                response['section'][point.id_en_eje] = {}
+                response['section'][point.id_en_eje]['origin'] = point.calle_origen
+                response['section'][point.id_en_eje]['destiny'] = point.calle_destino
+                response['section'][point.id_en_eje]['dates'] = []
+            
+            if point_ant!=point.id_en_eje :
+                response['section'][point.id_en_eje]['dates'].append({'date' : str(point.fecha), 'speed' : point.segundos_por_km_tramo})
+
+            point_ant = point.id_en_eje
+
+
+        return JsonResponse(response, safe=False)    
+
 class GetRefMapData(View):
     '''This class requests to the database the street secction with travel time '''
 
@@ -176,7 +221,27 @@ class GetRefMapData(View):
  
         points = entity.objects.filter(tipo_dia=dayType, periodo15=period).order_by('eje', 'tramo', 'dist_en_ruta')
 
-        response = transformData(points)
+        dataset = []
+        for point in points:
+            street = {}
+            street['axis'] = point.eje_id
+            street['section'] = point.secuencia_eje_macro
+            street['origin'] = point.calle_origen
+            street['destination'] = point.calle_destino
+            street['metrics'] = point.segundos_por_km_tramo
+            street['diff'] = point.diferencia_referencia
+            street['refVel'] = point.vel_referencia
+            street['nObs'] = point.nobs
+
+            dataset.append(street)
+
+        response = {}
+        response['dataset'] = dataset
+        response['hour'] = ''
+        if point:
+            delta = dt.timedelta(minutes=15)
+            upperTimeLimit = (dt.datetime.combine(dt.date.today(), point.periodo15) + delta).time()
+            response['hour'] = "{}-{}".format(point.periodo15, upperTimeLimit)
 
         return JsonResponse(response, safe=False)
 
