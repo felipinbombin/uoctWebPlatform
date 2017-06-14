@@ -124,20 +124,20 @@
     /**********BUILD THE CHART ******************/
     function processData(dataSource){
       
-        var seriess = []
-        var legends = []
-        var xData = []
+        var seriess = [];
+        var legends = [];
+        var xData = [];
         var sections = dataSource['section'];
 
         var unaVez = true;
         for (section in sections)
         {
-            var serieTmp = {}
+            var serieTmp = {};
             serieTmp['name'] = section;
             serieTmp['type'] = 'line';
             serieTmp['data'] = [];
             
-            var legend = {}
+            var legend = {};
             legend['name'] = section;
             for(date in sections[section]['dates']){
                  serieTmp['data'].push(sections[section]['dates'][date]['speed']);
@@ -158,10 +158,15 @@
             },
             grid : {
                 left : '10%',
-                right : '10%'
+                right : '10%',
+                top : '30',
+                bottom: '150'
             },
             legend: { 
-                data: legends, 
+                data: legends,
+                right : '20',
+                top : '50',
+                orient : 'vertical'
             },
             xAxis: {  
                 data: xData,
@@ -173,6 +178,12 @@
             yAxis: {
                 min : 0,
                 max : 1000
+            },
+            dataZoom : {
+                show : true,
+                realtime : true,
+                start : 0,
+                end : 100
             },
             toolbox: {
                 show : true,
