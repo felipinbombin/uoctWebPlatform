@@ -130,7 +130,7 @@ class HistoricalChartHandler(View):
 
     def get30MinutesPeriod(self):
         periods= []
-        minutes = ['00:00','30:00'] 
+        minutes = ['00:00','15:00','30:00','45:00'] 
         for hour in xrange(23):
             for minute in minutes:
                 if hour < 10:
