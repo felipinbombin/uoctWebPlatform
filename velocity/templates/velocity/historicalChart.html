@@ -82,14 +82,14 @@
   <div class="col-md-12 col-sm-12 col-xs-12">
     <div class="x_panel">
       <div class="x_title">
-        <h2>Velocidades historicas por eje</h2>
+        <h2>Tiempos historicos por eje</h2>
           <ul class="nav navbar-right panel_toolbox">
             <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
           </ul>
         <div class="clearfix"></div>
       </div>
       <div class="x_content">
-        <div id="main" style="width: 1200px;height:600px;"></div>
+        <div id="main" style="width: 800px;height:400px;"></div>
       </div>
     </div>
   </div>
@@ -127,6 +127,7 @@
         var seriess = [];
         var legends = [];
         var xData = [];
+        var selectedList = {}
         var sections = dataSource['section'];
 
         var unaVez = true;
@@ -139,6 +140,9 @@
             
             var legend = {};
             legend['name'] = section;
+            
+            selectedList[section] = false;
+            
             for(date in sections[section]['dates']){
                  serieTmp['data'].push(sections[section]['dates'][date]['speed']);
                 if(unaVez){
@@ -164,18 +168,21 @@
             },
             legend: { 
                 data: legends,
-                right : '20',
+                right : '0',
                 top : '50',
-                orient : 'vertical'
+                orient : 'vertical',
+                selected: selectedList
             },
             xAxis: {  
                 data: xData,
+                name: 'Dia',
                 axisLabel: {
                     rotate: 90,
-                    interval: 1
+                    interval: 0
                 }
             },
             yAxis: {
+                name: '[s/Km]',
                 min : 0,
                 max : 1000
             },
