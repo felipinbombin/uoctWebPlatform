@@ -22,77 +22,124 @@
 {% endblock %}
 
 {% block content %}
-  <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-      <div class="x_panel">
-        <div class="x_title">
-          <h2>Filtros <small></small></h2>
-          <ul class="nav navbar-right panel_toolbox">
-            <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
-          </ul>
-          <div class="clearfix"></div>
-        </div>
-        <div class="x_content">
-        <div class="row">
-
-            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-                <label class="control-label" for="filterCorridor">Eje :</label>
-                <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
-                <select class="form-control" id='filterCorridor'>
-                <option></option>
-                {% for idcorridor in idCorridors %}
-                <option>{{ idcorridor }}</option>
-                {% endfor %}
-                </select>
-            </div>
-          
-            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-                <label class="control-label" for="filterDayType">Tipo de Dia :</label>
-                <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
-                <select class="form-control" id='filterDayType'>
-                <option></option>
-                {% for daytype in daytypes %}
-                <option>{{ daytype }}</option>
-                {% endfor %}
-                </select>
-            </div>
-          
-            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
-                <label class="control-label" for="filterPeriod">Periodo :</label>
-                <!--<input type="text" id="filterPeriod" placeholder="Servicio sentido" class="form-control">-->
-                <select class="form-control" id='filterPeriod'>
-                <option></option>
-                {% for period in periods %}
-                <option>{{ period }}</option>
-                {% endfor %}
-                </select>
-            </div>
-        </div>
-       
-            <div class="col-md-12 col-sm-12 col-xs-12 form-group">
-                <div class="ln_solid"></div>
-                <button type="submit" id="btnUpdateChart" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
   
-  <div class="row">
-  <div class="col-md-12 col-sm-12 col-xs-12">
-    <div class="x_panel">
-      <div class="x_title">
-        <h2>Tiempos historicos por eje</h2>
-          <ul class="nav navbar-right panel_toolbox">
-            <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
-          </ul>
-        <div class="clearfix"></div>
-      </div>
-      <div class="x_content">
-        <div id="main" style="width: 800px;height:400px;"></div>
-      </div>
+<div class="row">
+    <!-- GRAFICO DE LINEAS-->
+    <div class="col-md-6 col-sm-6 col-xs-15">
+        
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>Tiempos historicos por eje</h2>
+                <ul class="nav navbar-right panel_toolbox">
+                    <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+                </ul>
+            <div class="clearfix"></div>
+        </div>
+        
+        <div class="x_content">
+            <div class="row">
+                <div class="col-md-3 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterCorridor">Eje :</label>
+                    <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+                    <select class="form-control" id='filterCorridor'>
+                    <option></option>
+                    {% for idcorridor in idCorridors %}
+                    <option>{{ idcorridor }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterDayType">Tipo de Dia :</label>
+                    <!-- <input type="text" id="filterRoute" placeholder="Servicio sentido" class="form-control">-->
+                    <select class="form-control" id='filterDayType'>
+                    <option></option>
+                    {% for daytype in daytypes %}
+                    <option>{{ daytype }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterPeriod">Periodo :</label>
+                    <!--<input type="text" id="filterPeriod" placeholder="Servicio sentido" class="form-control">-->
+                    <select class="form-control" id='filterPeriod'>
+                    <option></option>
+                    {% for period in periods %}
+                    <option>{{ period }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                        <button type="submit" id="btnUpdateChart" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
+                </div>
+            </div>
+            
+            <div class="ln_solid"></div>
+            <div id="main" style="width: 700px;height:400px;"></div>
+            
+        </div>
     </div>
-  </div>
+    
+    <!-- GRAFICO STACK-->
+    <div class="col-md-12 col-sm-12 col-xs-10">
+        
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>Tiempos historicos por eje</h2>
+                <ul class="nav navbar-right panel_toolbox">
+                    <li style="float:right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+                </ul>
+            <div class="clearfix"></div>
+        </div>
+        
+        <div class="x_content">
+            <div class="row">
+                <div class="col-md-3 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterCorridor2">Eje :</label>
+                    <select class="form-control" id='filterCorridor2'>
+                    <option></option>
+                    {% for idcorridor2 in idCorridors2 %}
+                    <option>{{ idcorridor2 }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterDayType2">Tipo de Dia :</label>
+                    <select class="form-control" id='filterDayType2'>
+                    <option></option>
+                    {% for daytype2 in daytypes2 %}
+                    <option>{{ daytype2 }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                    <label class="control-label" for="filterPeriod2">Periodo :</label>
+                    <select class="form-control" id='filterPeriod2'>
+                    <option></option>
+                    {% for period2 in periods2 %}
+                    <option>{{ period2 }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                        <button type="submit" id="btnUpdateChart2" class="btn btn-success btn-lg btn-round">Actualizar datos</button>
+                </div>
+                
+                
+            </div>
+            
+            <div class="ln_solid"></div>
+            <div id="main2" style="width: 700px;height:400px;"></div>
+            
+        </div>
+    </div>
+
+</div>
   
 
 {% endblock %}
