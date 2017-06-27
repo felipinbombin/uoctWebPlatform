@@ -39,6 +39,7 @@
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
           </thead>
         </table>
       </div>
@@ -124,7 +125,8 @@ function loadTable(update) {
             { title: 'Tramo',             data: 'section',     searchable: true, className: 'text-center'},
             { title: 'Inicio',            data: 'origin',      searchable: true},
             { title: 'Fin',               data: 'destination', searchable: true},
-            { title: 'N° obs',  data: 'nObs',        searchable: true, className: 'text-center'},
+            { title: 'Grupo',             data: 'grupo',       searchable: true},
+            { title: 'N° obs',            data: 'nObs',        searchable: true, className: 'text-center'},
             { title: 'Actual (s/km)',     data: 'metrics',     searchable: true, render: numberRender, className: 'text-center'},
             { title: 'Referencia (s/km)', data: 'refVel',      searchable: true, render: numberRender, className: 'text-center'},
             { title: 'Diferencia (s/km)', data: 'diff',        searchable: true, render: numberRender, className: 'text-center'},

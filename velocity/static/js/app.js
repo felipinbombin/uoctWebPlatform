@@ -237,7 +237,10 @@ let App = (function(aa){
         latLngs.push([point.latitude, point.longitude]);
       });
   
-      let line = L.polyline(latLngs, {color: _getColor(metrics)});
+      let line = L.polyline(latLngs, {
+        color: _getColor(metrics),
+        //weight: 6,
+      });
   
       let patternsOpts = [
       // defines a pattern of 10px-wide dashes, repeated every 20px on the line
