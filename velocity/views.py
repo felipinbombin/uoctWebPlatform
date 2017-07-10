@@ -315,6 +315,7 @@ class GetTimeTableData(View):
             street['diff'] = point.diferencia_referencia
             street['refVel'] = point.vel_referencia
             street['nObs'] = point.nobs
+            street['grupo'] = point.grupo
 
             dataset.append(street)
 
