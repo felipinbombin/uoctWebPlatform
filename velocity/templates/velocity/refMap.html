@@ -35,7 +35,7 @@
       if (i==0) {
         color = getColor(grades[i]-1);
         legend = ' Sin datos ';
-        let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+        let html = "<i style='background:" + color + "'></i>" + legend + "<br>";
         div.innerHTML += html;
       }
       switch (true) {
@@ -77,7 +77,7 @@
 
   let getMetricFactory = function(attr){
     let func = function(section){
-      return section[attr] != null ? section['attr'].toFixed(1) : null;
+      return section[attr] != null ? section[attr].toFixed(1) : null;
      };
      return func;
   };
@@ -137,13 +137,13 @@
          let getMetricFunc = null;
          switch(source){
           case 'pos':
-            getMetricFunc = getMetricFactory('postRefVel');
+            getMetricFunc = getMetricFactory('postVelRef');
              break;
           case 'diff':
-            getMetricFunc = getMetricFactory('diffRefVel');
+            getMetricFunc = getMetricFactory('diffVelRef');
              break;
           default:
-            getMetricFunc = getMetricFactory('preRefVel');
+            getMetricFunc = getMetricFactory('preVelRef');
              break;
          }
          app.setMetric(getMetricFunc);
