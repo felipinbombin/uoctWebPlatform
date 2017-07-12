@@ -34,6 +34,12 @@ def transformData(points):
             section['segxkm'] = point.segundos_por_km_tramo
             section['diff'] = point.diferencia_referencia
             section['percDiff'] = point.coeficiente_referencia
+            if hasattr(point, 'vel_referencia'):
+                section['preVelRef'] = point.vel_referencia
+            if hasattr(point, 'vel_referenciapost'):
+                section['posVelRef'] = point.vel_referenciapost
+            if hasattr(point, 'vel_referenciadiff'):
+                section['diffVelRef'] = point.vel_referenciadiff
             section['points'] = []
             response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
 

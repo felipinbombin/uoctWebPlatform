@@ -190,6 +190,10 @@ let App = (function(aa){
     let _getBubbleInfo = getBubbleInfo;
     let _makeBounds = true;
 
+	this.setMetric = function(getMetricFunc){
+      _getMetric = getMetricFunc;
+	};
+
     this.setMapControlVisibility = function(controlName, val){
       let control = _mapControls[controlName];
       _map.removeControl(control);
@@ -212,8 +216,12 @@ let App = (function(aa){
     }
   
     // Add control to map
-    this.addControl = function(legendControl){
+    this.addMapControl = function(legendControl){
       legendControl.addTo(_map);
+    };
+    // Remove control from map
+    this.removeMapControl = function(legendControl){
+      _map.removeControl(legendControl);
     };
 
     /**

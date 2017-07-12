@@ -17,113 +17,150 @@
            d <= 300 ? colors[3] :
            d <= 360 ? colors[4] :
                       colors[5];
-   };
+  };
 
-   // DEFINE LEGEND
-   let legend = L.control({position: 'bottomright'});
-   legend.onAdd = function (map) {
-     let div = L.DomUtil.create('div', 'info legend'),
-     grades = [0, 180, 240, 300, 360],
-     labels = [];
+  // DEFINE LEGEND
+  let legend = L.control({position: 'bottomright'});
+  legend.onAdd = function (map) {
+    let div = L.DomUtil.create('div', 'info legend'),
+    grades = [0, 180, 240, 300, 360],
+    labels = [];
 
-     div.innerHTML += '<h4>s/km</h4>';
+    div.innerHTML += '<h4>s/km</h4>';
 
-     // loop through our density intervals and generate a label with a colored square for each interval
-     for (let i = 0; i < grades.length; i++) {
-       let color = '';
-       let legend = '';
-       if (i==0) {
-         color = getColor(grades[i]-1);
-         legend = ' Sin datos ';
-         let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
-         div.innerHTML += html;
-       }
-       switch (true) {
-         case (i==grades.length-1):
-           color = getColor(grades[i]+1);
-           legend = ' > ' + grades[i];
-           break;
-         default: // middle
-           color = getColor(grades[i] + 1)
-           legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
-           break;
-       }
-       let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
-       div.innerHTML += html;
-     }
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (let i = 0; i < grades.length; i++) {
+      let color = '';
+      let legend = '';
+      if (i==0) {
+        color = getColor(grades[i]-1);
+        legend = ' Sin datos ';
+        let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+        div.innerHTML += html;
+      }
+      switch (true) {
+        case (i==grades.length-1):
+          color = getColor(grades[i]+1);
+          legend = ' > ' + grades[i];
+          break;
+        default: // middle
+          color = getColor(grades[i] + 1)
+          legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
+          break;
+      }
+      let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+      div.innerHTML += html;
+    }
 
-     return div;
-   };
+    return div;
+  };
 
-   let filterControl = L.control({position: 'topcenter'});
-   filterControl.onAdd = function (map) {
-     let div = L.DomUtil.create('div', 'info legend');
-     div.innerHTML += '<div class="form-inline"><select id="dayType" class="form-control input-sm">{%for dayType in dayTypes %}<option>{{dayType}}</option>{% endfor %}</select>'+
-     '<select id="period" class="form-control input-sm">{%for period in periods %}<option>{{period}}</option>{% endfor %}</select></div>';
-     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-     return div;
-   };
+  let filterControl = L.control({position: 'topcenter'});
+  filterControl.onAdd = function (map) {
+    let div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML += '<div class="form-inline">'+
+             '<select id="dayType" class="form-control input-sm">'+
+               '{%for dayType in dayTypes %}<option>{{dayType}}</option>{% endfor %}'+
+             '</select>'+
+             '<select id="period" class="form-control input-sm">'+
+                     '{%for period in periods %}<option>{{period}}</option>{% endfor %}'+
+             '</select>'+
+             '<select id="source" class="form-control input-sm">'+
+                 '<option>pre</option>'+
+                 '<option>pos</option>'+
+                 '<option>diff</option>'+
+             '</select>'+
+     '</div>';
+    div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+    return div;
+  };
 
-   let getMetric = function(section){
-     return section.segxkm != null ? section.segxkm.toFixed(1) : null;
-   };
+  let getMetricFactory = function(attr){
+    let func = function(section){
+      return section[attr] != null ? section['attr'].toFixed(1) : null;
+     };
+     return func;
+  };
 
-   // html to display in popup
-   let getBubbleInfo = function(metric, streetName, section){
-     let text = metric + " s/km";
-     if (metric == null) {
-       text = 'Sin Datos';
-     }
-     let order = section.order;
-     let origin = section.originStreet;
-     let destination = section.destinationStreet;
-     let group = section.group;
-     let nObs = section.nObs;
+  // html to display in popup
+  let getBubbleInfo = function(metric, streetName, section){
+    let text = metric + " s/km";
+    if (metric == null) {
+      text = 'Sin Datos';
+    }
+    let order = section.order;
+    let origin = section.originStreet;
+    let destination = section.destinationStreet;
+    let group = section.group;
+    let nObs = section.nObs;
 
-     let message = "<h3>" + text + "</h3>" + 
-                   "<h6>Eje: " + streetName + "</h6>" + 
-                   "<h6>Tramo: " + order + "</h6>" + 
-                   "<h6>Inicio: " + origin + "</h6>" + 
-                   "<h6>Fin: " + destination + "</h6>" + 
-                   "<h6>Grupo: " + group + "</h6>" + 
-                   "<h6>N° obs: " + nObs + "</h6>";
-     return message;
-   };
+    let message = "<h3>" + text + "</h3>" + 
+                  "<h6>Eje: " + streetName + "</h6>" + 
+                  "<h6>Tramo: " + order + "</h6>" + 
+                  "<h6>Inicio: " + origin + "</h6>" + 
+                  "<h6>Fin: " + destination + "</h6>" + 
+                  "<h6>Grupo: " + group + "</h6>" + 
+                  "<h6>N° obs: " + nObs + "</h6>";
+    return message;
+  };
 
-   let app = new App(getMetric, getColor, getColorPosition, getBubbleInfo);
-   app.addControl(legend);
-   app.addControl(filterControl);
-   app.setMapControlVisibility('hourInfo', false);
-   app.setMapControlVisibility('dayTypeInfo', false);
+  let app = new App(getMetricFactory('preVelRef'), getColor, getColorPosition, getBubbleInfo);
+  app.addMapControl(legend);
+  app.addMapControl(filterControl);
+  app.setMapControlVisibility('hourInfo', false);
+  app.setMapControlVisibility('dayTypeInfo', false);
 
-   //add button logic
-   $('.form-control').change(function(){
-     let data = {};
-     data['networkId'] = {{ networkId }};
-     data['dayType'] = $('#dayType option:checked').val();
-     data['period'] = $('#period option:checked').val();
-     $.ajax({
-       url: "{% url 'velocity:getRefMapData' %}",
-       data: data,
-       success: function(data){
-         console.log('update map data');
-         // merge streets
-         let streets = {};
-         $.each(data.Destination, function(i, origin){
-           $.each(origin, function(i,v){
-             streets = $.extend(streets, v);
-           });
-         });
-         $.each(streets, function(streetName, street) {
-           $.each(street.sections, function(sectionName, section) {
-             app.generateOverlays(streetName, sectionName, section);
-           });
-         });
-         app.updateMap(data.hour, data.dayType);
-       }
-     });
-   });
-   $('#period').change();
+  //add button logic
+  $('.form-control').change(function(){
+    let params = {};
+    params['networkId'] = {{ networkId }};
+    params['dayType'] = $('#dayType option:checked').val();
+    params['period'] = $('#period option:checked').val();
+
+    $.ajax({
+      url: "{% url 'velocity:getRefMapData' %}",
+      data: params,
+      success: function(data){
+        console.log('update map data');
+         console.log(data);
+
+        // merge streets
+        let streets = {};
+        $.each(data.Destination, function(i, origin){
+          $.each(origin, function(i,v){
+            streets = $.extend(streets, v);
+          });
+        });
+
+         // select metric
+        let source = $('#source option:checked').val();
+         let getMetricFunc = null;
+         switch(source){
+          case 'pos':
+            getMetricFunc = getMetricFactory('postRefVel');
+             break;
+          case 'diff':
+            getMetricFunc = getMetricFactory('diffRefVel');
+             break;
+          default:
+            getMetricFunc = getMetricFactory('preRefVel');
+             break;
+         }
+         app.setMetric(getMetricFunc);
+
+         // generate polylines
+        $.each(streets, function(streetName, street) {
+          $.each(street.sections, function(sectionName, section) {
+            app.generateOverlays(streetName, sectionName, section);
+          });
+        });
+
+         // update map 
+        app.updateMap(data.hour, data.dayType);
+      }
+    });
+  });
+  $('#period').change();
 {% endblock %}
 
 {% block downloaddata %}
