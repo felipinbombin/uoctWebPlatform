@@ -1,3 +1,5 @@
+"use strict";
+
 let App = (function(){
   let Element = function(layer, color, group, name) {
     this.layer = layer;
@@ -10,8 +12,8 @@ let App = (function(){
       this.visible = true;
     };
     this.removeFromMap = function() {
-      this.visible = false;
       this.layer.remove();
+      this.visible = false;
     };
     this.updateLayer = function(layer, map){
       if(this.visible){
@@ -22,6 +24,7 @@ let App = (function(){
         this.layer = layer;
       }
     };
+    this.isOld = false;
   };
 
   function getMap(){
@@ -177,7 +180,32 @@ let App = (function(){
       }
     };
   }
+/*
+  let _wrapper = getMap();
 
+  let defaults = {
+     mapControls: {
+         showSwitchMapControl: true,
+         showFilterControl: true,
+         showHourControl: true,
+         showDayTypeControl: true
+     },
+     getMetric: null,
+     getColor: null,
+     getColorPosition: null,
+     getBubbleInfo: null
+  };
+
+  function App(options) {
+    let _makeBounds = true;
+    let map = _wrapper.map;
+
+    // Merge user settings with default, recursively.
+    this.options = $.extend(true, {}, defaults, options);
+
+
+  }
+*/
   function App(getMetricFunc, getColorFunc, getColorPositionFunc, getBubbleInfo){
     let _wrapper = getMap();
     let _map = _wrapper.map;
@@ -203,7 +231,7 @@ let App = (function(){
           _map.addControl(control);
         }
     };
-    let _categorizeSection = function(layer, color, group, name, id) {
+    let _updateElement = function(layer, color, group, name, id) {
       // if id is present in data
       if(_dataSource.hasOwnProperty(id)){
         let el = _dataSource[id];
@@ -211,19 +239,18 @@ let App = (function(){
         el.group = group;
         el.name = name;
         el.updateLayer(layer, _map);
-        return;
+      }else {
+        _dataSource[id] = new Element(layer, color, group, name);
       }
-
-      _dataSource[id] = new Element(layer, color, group, name);
     };
 
     // Add control to map
-    this.addMapControl = function(legendControl){
-      legendControl.addTo(_map);
+    this.addMapControl = function(control){
+      control.addTo(_map);
     };
     // Remove control from map
-    this.removeMapControl = function(legendControl){
-      _map.removeControl(legendControl);
+    this.removeMapControl = function(control){
+      _map.removeControl(control);
     };
 
     /**
@@ -296,7 +323,7 @@ let App = (function(){
       overlay.addLayer(line);
       overlay.addLayer(decorator);
 
-      _categorizeSection(overlay, _getColor(metrics), group, streetName, id);
+      _updateElement(overlay, _getColor(metrics), group, streetName, id);
 
       console.log("Map updated with polyline decorator");
     };
@@ -308,7 +335,7 @@ let App = (function(){
       $("#dayType").text(dayType);
 
       // update filter
-      this.updateFilterWindow(_getColorPosition);
+      this.updateFilterWindow();
 
       let bounds = null;
 
@@ -355,6 +382,8 @@ let App = (function(){
 
     let _generateGroupList = function(divId, attrName, sortFunction, getLabel) {
       let orderedList = _getAttributeUniqueList(attrName, sortFunction);
+      // delete children
+      $("#"+divId).children().remove();
       $.each(orderedList, function(index, item){
         let attrValue = item.attrValue;
         let frecuency = item.frecuency;
