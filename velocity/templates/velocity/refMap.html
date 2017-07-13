@@ -122,8 +122,8 @@
              '</select>'+
              '<select id="source" class="form-control input-sm">'+
                  '<option>pre</option>'+
-                 '<option>pos</option>'+
-                 '<option>diff</option>'+
+                 '<option>post</option>'+
+                 '<option>dif</option>'+
              '</select>'+
      '</div>';
     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
@@ -190,11 +190,11 @@
         let getMetricFunc = null;
         let style = null;
         switch(source){
-          case 'pos':
+          case 'post':
             getMetricFunc = getMetricFactory('postVelRef');
             style = style1;
             break;
-          case 'diff':
+          case 'dif':
             getMetricFunc = getMetricFactory('diffVelRef');
             style = style2;
             break;
