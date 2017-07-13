@@ -1,24 +1,23 @@
 {% extends 'velocity/mapBase.html' %}
 
 {% block mapjs %}
-  // color for line
-  let colors = ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F'];
-  let getColorPosition = function(color) {
-    return $.inArray(color, colors);
+  let style1 = {
+    colors: ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F']
+  }
+  style1.getColorPosition = function(color) {
+    return $.inArray(color, style1.colors);
   };
-
-  let getColor = function(d) {
+  style1.getColor = function(d) {
     if(d == null){
-      return colors[0];
+      return style1.colors[0];
     }
-    return d <  0   ? colors[0] :
-           d <= 180 ? colors[1] :
-           d <= 240 ? colors[2] :
-           d <= 300 ? colors[3] :
-           d <= 360 ? colors[4] :
-                      colors[5];
+    return d <  0   ? style1.colors[0] :
+           d <= 180 ? style1.colors[1] :
+           d <= 240 ? style1.colors[2] :
+           d <= 300 ? style1.colors[3] :
+           d <= 360 ? style1.colors[4] :
+                      style1.colors[5];
   };
-
   // DEFINE LEGEND
   let legend = L.control({position: 'bottomright'});
   legend.onAdd = function (map) {
@@ -33,18 +32,73 @@
       let color = '';
       let legend = '';
       if (i==0) {
-        color = getColor(grades[i]-1);
+        color = style1.getColor(grades[i]-1);
         legend = ' Sin datos ';
         let html = "<i style='background:" + color + "'></i>" + legend + "<br>";
         div.innerHTML += html;
       }
       switch (true) {
         case (i==grades.length-1):
-          color = getColor(grades[i]+1);
+          color = style1.getColor(grades[i]+1);
           legend = ' > ' + grades[i];
           break;
         default: // middle
-          color = getColor(grades[i] + 1)
+          color = style1.getColor(grades[i] + 1);
+          legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']';
+          break;
+      }
+      let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+      div.innerHTML += html;
+    }
+    return div;
+  };
+  style1.legend = legend;
+
+  let style2 = {
+    colors: ['#c4c4c4','#0061ff','#187200','#6dff44','#c9d802','#ff9400','#fc3d3a']
+  }
+  style2.getColorPosition = function(color) {
+    return $.inArray(color, style2.colors);
+  };
+  style2.getColor = function(d) {
+    if(d == null){
+      return style2.colors[0];
+    }
+    return d <  -60 ? style2.colors[1] :
+           d <= -30 ? style2.colors[2] :
+           d <= 0   ? style2.colors[3] :
+           d <= 30  ? style2.colors[4] :
+           d <= 60  ? style2.colors[5] :
+                      style2.colors[6];
+  };
+  // DEFINE LEGEND
+  legend = L.control({position: 'bottomright'});
+  legend.onAdd = function (map) {
+    let div = L.DomUtil.create('div', 'info legend'),
+    grades = [-60, -30, 0, 30 ,60],
+    labels = [];
+
+    div.innerHTML += '<h4>s/km</h4>';
+    var htmlGray = '<i style="background:' + style2.colors[0] + '"></i> Sin Datos <br>';
+    div.innerHTML += htmlGray;
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (let i = 0; i < grades.length; i++) {
+      let color = '';
+      let legend = '';
+      if (i==0) {
+        color = style2.getColor(grades[i]-1);
+        legend = ' < ' + grades[i];;
+        let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
+        div.innerHTML += html;
+      }
+      switch (true) {
+        case (i==grades.length-1):
+          color = style2.getColor(grades[i]+1);
+          legend = ' > ' + grades[i];
+          break;
+        default: // middle
+          color = style2.getColor(grades[i] + 1)
           legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']'
           break;
       }
@@ -54,6 +108,7 @@
 
     return div;
   };
+  style2.legend = legend;
 
   let filterControl = L.control({position: 'topcenter'});
   filterControl.onAdd = function (map) {
@@ -104,8 +159,8 @@
     return message;
   };
 
-  let app = new App(getMetricFactory('preVelRef'), getColor, getColorPosition, getBubbleInfo);
-  app.addMapControl(legend);
+  let app = new App(getMetricFactory('preVelRef'), style1.getColor, style1.getColorPosition, getBubbleInfo);
+  app.addMapControl(style1.legend);
   app.addMapControl(filterControl);
   app.setMapControlVisibility('hourInfo', false);
   app.setMapControlVisibility('dayTypeInfo', false);
@@ -122,8 +177,6 @@
       data: params,
       success: function(data){
         console.log('update map data');
-         console.log(data);
-
         // merge streets
         let streets = {};
         $.each(data.Destination, function(i, origin){
@@ -132,30 +185,38 @@
           });
         });
 
-         // select metric
+        // select metric
         let source = $('#source option:checked').val();
-         let getMetricFunc = null;
-         switch(source){
+        let getMetricFunc = null;
+        let style = null;
+        switch(source){
           case 'pos':
             getMetricFunc = getMetricFactory('postVelRef');
-             break;
+            style = style1;
+            break;
           case 'diff':
             getMetricFunc = getMetricFactory('diffVelRef');
-             break;
+            style = style2;
+            break;
           default:
             getMetricFunc = getMetricFactory('preVelRef');
-             break;
-         }
-         app.setMetric(getMetricFunc);
+            style = style1;
+            break;
+        }
+        app.setMetric(getMetricFunc);
+        app.setStyle(style.getColor, style.getColorPosition);
+        app.removeMapControl(style1.legend);
+        app.removeMapControl(style2.legend);
+        app.addMapControl(style.legend);
 
-         // generate polylines
+        // generate polylines
         $.each(streets, function(streetName, street) {
           $.each(street.sections, function(sectionName, section) {
             app.generateOverlays(streetName, sectionName, section);
           });
         });
 
-         // update map 
+        // update map
         app.updateMap(data.hour, data.dayType);
       }
     });

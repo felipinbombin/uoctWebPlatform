@@ -25,7 +25,7 @@ let App = (function(){
   };
 
   function getMap(){
-   // Set map
+    // Set map
     let beauchefLocation = L.latLng(-33.457910, -70.663869);
     let mapid = $(".right_col")[0];
     let map = L.map(mapid, {
@@ -192,7 +192,10 @@ let App = (function(){
     this.setMetric = function(getMetricFunc){
       _getMetric = getMetricFunc;
     };
-
+    this.setStyle = function(getColorFunc, getColorPositionFunc){
+      _getColor = getColorFunc;
+      _getColorPosition = getColorPositionFunc;
+    };
     this.setMapControlVisibility = function(controlName, val){
       let control = _mapControls[controlName];
       _map.removeControl(control);
