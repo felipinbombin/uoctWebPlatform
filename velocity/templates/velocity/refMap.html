@@ -177,6 +177,7 @@
       data: params,
       success: function(data){
         console.log('update map data');
+        console.log(data);
         // merge streets
         let streets = {};
         $.each(data.Destination, function(i, origin){
@@ -191,7 +192,7 @@
         let style = null;
         switch(source){
           case 'post':
-            getMetricFunc = getMetricFactory('postVelRef');
+            getMetricFunc = getMetricFactory('posVelRef');
             style = style1;
             break;
           case 'dif':
