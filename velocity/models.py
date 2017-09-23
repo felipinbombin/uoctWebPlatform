@@ -143,6 +143,8 @@ class Tramos15MinUOCTReferencia2349(models.Model):
     visible = models.IntegerField(blank=True, null=True)
     coeficiente_referencia = models.FloatField(blank=True, null=True)
     vel_referencia = models.FloatField(blank=True, null=True)
+    vel_referenciapost = models.FloatField(blank=True, null=True)
+    vel_referenciadiff = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = False
