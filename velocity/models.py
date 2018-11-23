@@ -34,7 +34,7 @@ class Tramos15MinUOCT74(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tramos_15min_uoct_red74'
+        db_table = 'tramos_15min_transdict_red74'
         unique_together = (('tramo', 'eje', 'dist_en_ruta'),)
 
 class Tramos15MinUOCT2349(models.Model):
@@ -109,7 +109,7 @@ class Tramos15MinUOCTReferencia74(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tramos_15min_referencia_uoct_red74'
+        db_table = 'tramos_15min_referencia_transdict_red74'
         unique_together = (('tipo_dia', 'periodo15', 'id'),)
 
 class Tramos15MinUOCTReferencia2349(models.Model):
@@ -148,7 +148,7 @@ class Tramos15MinUOCTReferencia2349(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tramos_15min_referencia_uoct_red2349'
+        db_table = 'tramos_15min_referencia_transdict_red2349'
         unique_together = (('tipo_dia', 'periodo15', 'id'),)
 
 

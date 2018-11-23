@@ -145,7 +145,7 @@ class GetRefMapData(View):
         elif networkId == 23491:
             entity = Tramos15MinUOCTReferencia2349
  
-        points = entity.objects.filter(tipo_dia=dayType, periodo15=period).order_by('eje', 'tramo', 'dist_en_ruta')
+        points = list(entity.objects.filter(tipo_dia=dayType, periodo15=period).order_by('eje', 'tramo', 'dist_en_ruta'))
 
         response = transformData(points)
 
@@ -170,7 +170,7 @@ class GetMapData(View):
         elif networkId == 2349:
             entity = Tramos15MinUOCT2349
         
-        points = entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta')
+        points = list(entity.objects.filter(visible=1).order_by('eje', 'tramo', 'dist_en_ruta'))
 
         response = transformData(points)
 
@@ -211,6 +211,7 @@ class GetTimeTableData(View):
         points = entity.objects.all().distinct('eje_id', 'tramo', 'calle_origen', 'calle_destino', 'segundos_por_km_tramo')
         
         dataset = []
+        point = None
         for point in points:
             street = {}
             street['corridorId'] = point.eje_id
@@ -245,7 +246,7 @@ class GetDataStatus(View):
 
     def get(self, request):
         ''' '''
-        obj = Status.objects.get(id='uoct_red74')
+        obj = Status.objects.get(id='transdict_red74')
 
         response = {}
         response['status'] = obj.status
