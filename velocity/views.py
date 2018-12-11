@@ -40,6 +40,14 @@ def transformData(points):
                 section['posVelRef'] = point.vel_referenciapost
             if hasattr(point, 'vel_referenciadiff'):
                 section['diffVelRef'] = point.vel_referenciadiff
+            if hasattr(point, 'demora_nivel_autos'):
+                section['demora_nivel_autos'] = point.demora_nivel_autos
+            if hasattr(point, 'demora_nivel_buses'):
+                section['demora_nivel_buses'] = point.demora_nivel_buses
+            if hasattr(point, 'demora_nivel_diff'):
+                section['demora_nivel_diff'] = point.demora_nivel_diff
+            if hasattr(point, 'demora_autos'):
+                section['demora_autos'] = point.demora_autos
             section['points'] = []
             response[dest][point.destino][point.zona][point.eje]['sections'][point.tramo] = section
 
@@ -77,20 +85,16 @@ class RefMapHandler(View):
 class RefMapHandlerConge(View):
     '''This class manages the map where the street section are shown'''
 
-    def __init__(self):
-        """the contructor, context are the parameter given to the html template"""
-        self.context={}
-
-    def get(self, request, networkId):
+    def get(self, request):
         template = "velocity/refMapConge.html"
-        
-        entity = None
+
         entity = Tramos15MinUOCTReferencia74
 
-        self.context['dayTypes'] = entity.objects.values_list('tipodia', flat=True).distinct().order_by('tipodia')
-        self.context['periods'] = entity.objects.values_list('periodo15', flat=True).distinct().order_by('periodo15')
+        context = {}
+        context['dayTypes'] = entity.objects.values_list('tipodia', flat=True).distinct().order_by('tipodia')
+        context['periods'] = entity.objects.values_list('periodo15', flat=True).distinct().order_by('periodo15')
 
-        return render(request, template, self.context)
+        return render(request, template, context)
 
 
 class TimeMapHandler(View):

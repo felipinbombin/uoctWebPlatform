@@ -2,7 +2,7 @@
 
 {% block mapjs %}
   let style1 = {
-    colors: ['#c4c4c4','#59F000','#c9d802','#FF7400','#FF0000','#68266F']
+    colors: ['#c4c4c4','#25ce38','#ecff21','#efb710','#ef1010','#ef10c6']
   }
   style1.getColorPosition = function(color) {
     return $.inArray(color, style1.colors);
@@ -11,40 +11,39 @@
     if(d == null){
       return style1.colors[0];
     }
-    return d <  0   ? style1.colors[0] :
-           d <= 180 ? style1.colors[1] :
-           d <= 240 ? style1.colors[2] :
-           d <= 300 ? style1.colors[3] :
-           d <= 360 ? style1.colors[4] :
-                      style1.colors[5];
+    return d < 1 ? style1.colors[0] :
+           d == 1 ? style1.colors[1] :
+           d <= 2 ? style1.colors[2] :
+           d <= 3 ? style1.colors[3] :
+           d <= 4 ? style1.colors[4] :
+                    style1.colors[5];
   };
   // DEFINE LEGEND
   let legend = L.control({position: 'bottomright'});
   legend.onAdd = function (map) {
     let div = L.DomUtil.create('div', 'info legend'),
-    grades = [0, 180, 240, 300, 360],
-    labels = [];
+    grades = [0, 1, 2, 3, 4],
+    labels = [],
+    legends = ['No apreciable', 'moderada', 'significativa', 'alta', 'severa'];
 
-    div.innerHTML += '<h4>s/km</h4>';
+    div.innerHTML += '<h4>Nivel de congestión</h4>';
 
     // loop through our density intervals and generate a label with a colored square for each interval
     for (let i = 0; i < grades.length; i++) {
       let color = '';
-      let legend = '';
       if (i==0) {
         color = style1.getColor(grades[i]-1);
-        legend = ' Sin datos ';
+        let legend = ' Sin datos ';
         let html = "<i style='background:" + color + "'></i>" + legend + "<br>";
         div.innerHTML += html;
       }
+      legend = legends[i];
       switch (true) {
         case (i==grades.length-1):
           color = style1.getColor(grades[i]+1);
-          legend = ' > ' + grades[i];
           break;
         default: // middle
           color = style1.getColor(grades[i] + 1);
-          legend = ' (' + grades[i] + ', ' + grades[i + 1] + ']';
           break;
       }
       let html = '<i style="background:' + color + '"></i>' + legend + '<br>';
@@ -121,8 +120,8 @@
                      '{%for period in periods %}<option>{{period}}</option>{% endfor %}'+
              '</select>'+
              '<select id="source" class="form-control input-sm">'+
-                 '<option>pre</option>'+
-                 '<option>post</option>'+
+                 '<option>autos</option>'+
+                 '<option>buses</option>'+
                  '<option>dif</option>'+
              '</select>'+
      '</div>';
@@ -139,7 +138,7 @@
 
   // html to display in popup
   let getBubbleInfo = function(metric, streetName, section){
-    let text = metric + " s/km";
+    let text = section.demora_autos + " s/km";
     if (metric == null) {
       text = 'Sin Datos';
     }
@@ -168,7 +167,7 @@
   //add button logic
   $('.form-control').change(function(){
     let params = {};
-    params['networkId'] = {{ networkId }};
+    params['networkId'] = 741;
     params['dayType'] = $('#dayType option:checked').val();
     params['period'] = $('#period option:checked').val();
 
@@ -191,17 +190,17 @@
         let getMetricFunc = null;
         let style = null;
         switch(source){
-          case 'post':
-            getMetricFunc = getMetricFactory('posVelRef');
+          case 'buses':
+            getMetricFunc = getMetricFactory('demora_nivel_buses');
             style = style1;
             break;
-          case 'dif':
-            getMetricFunc = getMetricFactory('diffVelRef');
-            style = style2;
+          case 'autos':
+            getMetricFunc = getMetricFactory('demora_nivel_autos');
+            style = style1;
             break;
           default:
-            getMetricFunc = getMetricFactory('preVelRef');
-            style = style1;
+            getMetricFunc = getMetricFactory('demora_nivel_diff');
+            style = style2;
             break;
         }
         app.setMetric(getMetricFunc);
