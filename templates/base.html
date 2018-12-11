@@ -29,7 +29,7 @@
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fa fa-dashboard"></i> <span>Transdict</span></a>
+              <a href="index.html" class="site_title"><i class="fa fa-dashboard"></i> <span>Trandict</span></a>
             </div>
 
             <div class="clearfix"></div>
@@ -39,36 +39,37 @@
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
-                <h3>Redes</h3>
+                <h3>Red Piloto</h3>
                 <ul class="nav side-menu">
-                  <li><a><i class="fa fa-bus"></i> Red 74 <span class="fa fa-chevron-down"></span></a>
-                    <ul class="nav child_menu">
-                      <li><a href=" {% url 'velocity:timeMap' networkId=74 %} ">
-                        <i class="fa fa-map"></i> Mapa de tiempos</a></li>
-                      <li><a href=" {% url 'velocity:diffMap' networkId=74%} ">
-                        <i class="fa fa-map"></i> Mapa de diferencias</a></li>
-                      <li><a href=" {% url 'velocity:diffPercMap' networkId=74%} ">
-                        <i class="fa fa-map"></i> Mapa de diferencias (%)</a></li>
-                      <li><a href=" {% url 'velocity:refMap' networkId=741 %}">
-                        <i class="fa fa-map"></i> Mapas de referencia</a></li>
-                      <li><a href=" {% url 'velocity:timeTable' networkId=74%}">
-                        <i class="fa fa-table"></i> Tabla</a></li>
-                    </ul>
+                  <li><a><i class="fa fa-bus"></i> Tiempo de Viaje<span class="fa fa-chevron-down"></span></a>
+                      <ul class="nav child_menu">
+                        <li><a href=" {% url 'velocity:timeMap' networkId=74 %} ">
+                          <i class="fa fa-map"></i> Mapa de tiempos</a></li>
+                        <li><a href=" {% url 'velocity:diffMap' networkId=74%} ">
+                          <i class="fa fa-map"></i> Mapa de diferencias</a></li>
+                        <li><a href=" {% url 'velocity:diffPercMap' networkId=74%} ">
+                          <i class="fa fa-map"></i> Mapa de diferencias (%)</a></li>
+                        <li><a href=" {% url 'velocity:refMap' networkId=741 %}">
+                          <i class="fa fa-map"></i> Mapas de referencia</a></li>
+                        <li><a href=" {% url 'velocity:timeTable' networkId=74%}">
+                          <i class="fa fa-table"></i> Tabla</a></li>
+                      </ul>
                   </li>
-                  <li><a><i class="fa fa-bus"></i> Red 2349 <span class="fa fa-chevron-down"></span></a>
+		
+                  <li><a><i class="fa fa-bus"></i> Demora por Congestión <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href=" {% url 'velocity:timeMap' networkId=2349 %} ">
-                        <i class="fa fa-map"></i> Mapa de tiempos</a></li>
-                      <li><a href=" {% url 'velocity:diffMap' networkId=2349 %} ">
+                      <li><a href=" {% url 'velocity:timeMapConge' networkId=74 %} ">
+                        <i class="fa fa-map"></i> Mapa de congestion</a></li>
+                      <li><a href=" {% url 'velocity:diffMapConge' networkId=74 %} ">
                         <i class="fa fa-map"></i> Mapa de diferencias</a></li>
-                      <li><a href=" {% url 'velocity:diffPercMap' networkId=2349 %} ">
+                      <li><a href=" {% url 'velocity:diffPercMapConge' networkId=74 %} ">
                         <i class="fa fa-map"></i> Mapa de diferencias (%)</a></li>
-                      <li><a href=" {% url 'velocity:refMap' networkId=23491 %}">
+                      <li><a href=" {% url 'velocity:refMapConge' %}">
                         <i class="fa fa-map"></i> Mapas de referencia</a></li>
-                      <li><a href=" {% url 'velocity:timeTable' networkId=2349 %}">
+                      <li><a href=" {% url 'velocity:timeTableConge' networkId=74 %}">
                         <i class="fa fa-table"></i> Tabla</a></li>
                     </ul>
-				  </li>
+		 </li> 
                 </ul>
               </div>
             </div>

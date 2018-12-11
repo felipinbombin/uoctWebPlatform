@@ -106,6 +106,12 @@ class Tramos15MinUOCTReferencia74(models.Model):
     vel_referencia = models.FloatField(blank=True, null=True)
     vel_referenciapost = models.FloatField(blank=True, null=True)
     vel_referenciadiff = models.FloatField(blank=True, null=True)
+    demora_autos = models.FloatField(blank=True, null=True)
+    demora_buses = models.FloatField(blank=True, null=True)
+    demora_diff = models.FloatField(blank=True, null=True)
+    demora_nivel_autos = models.FloatField(blank=True, null=True)
+    demora_nivel_buses = models.FloatField(blank=True, null=True)
+    demora_nivel_diff = models.FloatField(blank=True, null=True)
 
     class Meta:
         managed = False

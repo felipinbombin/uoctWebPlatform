@@ -74,8 +74,39 @@ class RefMapHandler(View):
 
         return render(request, template, self.context)
 
+class RefMapHandlerConge(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request, networkId):
+        template = "velocity/refMapConge.html"
+        
+        entity = None
+        entity = Tramos15MinUOCTReferencia74
+
+        self.context['dayTypes'] = entity.objects.values_list('tipodia', flat=True).distinct().order_by('tipodia')
+        self.context['periods'] = entity.objects.values_list('periodo15', flat=True).distinct().order_by('periodo15')
+
+        return render(request, template, self.context)
+
 
 class TimeMapHandler(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request, networkId):
+        template = "velocity/map.html"
+        self.context['networkId'] = networkId
+
+        return render(request, template, self.context)
+
+class TimeMapHandlerConge(View):
     '''This class manages the map where the street section are shown'''
 
     def __init__(self):
@@ -101,6 +132,19 @@ class DiffMapHandler(View):
 
         return render(request, template, self.context)
 
+class DiffMapHandlerConge(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request, networkId):
+        template = "velocity/mapDiff.html"
+        self.context['networkId'] = networkId
+
+        return render(request, template, self.context)
+
 class PercDiffMapHandler(View):
     '''This class manages the map where the street section are shown'''
 
@@ -114,7 +158,32 @@ class PercDiffMapHandler(View):
 
         return render(request, template, self.context)
 
+class PercDiffMapHandlerConge(View):
+    '''This class manages the map where the street section are shown'''
+
+    def __init__(self):
+        """the contructor, context are the parameter given to the html template"""
+        self.context={}
+
+    def get(self, request, networkId):
+        template = "velocity/mapPercDiff.html"
+        self.context['networkId'] = networkId
+
+        return render(request, template, self.context)
+
+
 class TimeTableMapHandler(View):
+    '''  '''
+    def __init__(self):
+        self.context={}
+
+    def get(self, request, networkId):
+        template = 'velocity/table.html'
+        self.context['networkId'] = networkId
+
+        return render(request, template, self.context)
+
+class TimeTableMapHandlerConge(View):
     '''  '''
     def __init__(self):
         self.context={}
